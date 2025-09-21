@@ -107,7 +107,7 @@ while true; do
         4) run_remote_script "https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/uninstallptero" ;;
         5) run_remote_script "https://raw.githubusercontent.com/ParaNoob123/Blueprint/refs/heads/main/paracom" ;;
         6) run_remote_script "https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/cloudflareinstall" ;;
-        7) run_remote_script "https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/nookthemeinstall" ;;
+        7) run_remote_script "https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/thememenu" ;;
         9) system_info ;;
         10) echo "Exiting..."; exit 0 ;;
         *) echo -e "${RED}${BOLD}Invalid option!${RESET}"; read -p "Press Enter to continue..." ;;
