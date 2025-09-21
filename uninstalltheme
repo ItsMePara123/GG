@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -e
+
+# ================================
+#   Pterodactyl Theme Uninstaller
+# ================================
+
+clear
+echo -e "\e[1;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo -e "   🗑️  PTERODACTYL THEME UNINSTALLER  🗑️"
+echo -e "\e[1;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo ""
+
+echo -e "🚀 Starting theme removal process..."
+
+# Go to panel directory
+cd /var/www/pterodactyl || { echo -e "❌ \e[1;31mPanel directory not found!\e[0m"; exit 1; }
+
+# Maintenance mode
+echo -e "⚙️  Putting panel into maintenance mode..."
+php artisan down
+
+# Download latest original release (to restore default files)
+echo -e "⬇️  Restoring default panel files..."
+curl -L https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz | tar -xzv
+
+# Permissions
+echo -e "🔑 Fixing file permissions..."
+chmod -R 755 storage/* bootstrap/cache
+
+# Composer install
+echo -e "📦 Installing clean PHP dependencies..."
+composer install --no-dev --optimize-autoloader
+
+# Clear caches
+echo -e "🧹 Clearing Laravel caches..."
+php artisan view:clear
+php artisan config:clear
+
+# Migrations (safe, won’t touch data)
+echo -e "📂 Running database migrations..."
+php artisan migrate --seed --force
+
+# Ownership
+echo -e "👤 Resetting ownership to www-data..."
+chown -R www-data:www-data /var/www/pterodactyl/*
+
+# Restart queue workers
+echo -e "♻️ Restarting queue workers..."
+php artisan queue:restart
+
+# Back online
+echo -e "✅ Bringing panel back online..."
+php artisan up
+
+# Done
+echo ""
+echo -e "\e[1;32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo -e " 🎉 Theme successfully uninstalled! Panel reset to default 🚀"
+echo -e "\e[1;32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
