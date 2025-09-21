@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# ================================
+#   Pterodactyl Theme Menu
+# ================================
+
+while true; do
+    clear
+    echo "=============================="
+    echo " 🎨 Pterodactyl Theme Menu"
+    echo "=============================="
+    echo "1) Nebula Theme"
+    echo "2) Nook Theme"
+    echo "3) Uninstall Theme"
+    echo "0) Exit"
+    echo "------------------------------"
+    read -p "Choose an option: " choice
+
+    case $choice in
+        1) 
+            clear
+            echo "==============================================="
+            echo " 🚀 Nebula Theme Installation Information"
+            echo "==============================================="
+            echo ""
+            echo "Please visit the following link to read the"
+            echo "installation guide and install the theme:"
+            echo ""
+            echo "👉 https://github.com/ParaNoob123/IPV6-Nebula"
+            echo ""
+            ;;
+        2)
+            clear
+            echo "==============================================="
+            echo " 🚀 Installing Nook Theme..."
+            echo "==============================================="
+            bash <(curl -sSL https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/nookthemeinstall)
+            echo ""
+            echo "✅ Nook Theme installed successfully!"
+            ;;
+        3)
+            clear
+            echo "==============================================="
+            echo " 🗑️  Uninstalling Theme..."
+            echo "==============================================="
+            bash <(curl -sSL https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/uninstalltheme)
+            echo ""
+            echo "✅ Theme uninstalled and panel restored to default!"
+            ;;
+        0) 
+            echo "Exiting..."
+            exit 0 
+            ;;
+        *) 
+            echo "❌ Invalid option!"
+            read -p "Press Enter to continue..." 
+            ;;
+    esac
+
+    read -p "Press Enter to return to menu..."
+done
