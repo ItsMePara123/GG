@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -e
+
+# ===========================
+#   Pterodactyl Panel Updater
+# ===========================
+
+clear
+echo -e "\e[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo -e "   🔄  PTERODACTYL PANEL UPDATE UTILITY  🔄"
+echo -e "\e[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo ""
+
+echo -e "🚀 Starting update process for Pterodactyl Panel..."
+
+# Go to panel directory
+cd /var/www/pterodactyl || { echo -e "❌ \e[1;31mPanel directory not found!\e[0m"; exit 1; }
+
+# Maintenance mode
+echo -e "⚙️  Enabling maintenance mode..."
+php artisan down
+
+# Download latest release
+echo -e "⬇️  Fetching latest panel release..."
+curl -L https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz | tar -xzv
+
+# Permissions
+echo -e "🔑 Adjusting file permissions..."
+chmod -R 755 storage/* bootstrap/cache
+
+# Composer install
+echo -e "📦 Installing PHP dependencies (Composer)..."
+composer install --no-dev --optimize-autoloader
+
+# Clear caches
+echo -e "🧹 Clearing Laravel caches..."
+php artisan view:clear
+php artisan config:clear
+
+# Migrations
+echo -e "📂 Running database migrations..."
+php artisan migrate --seed --force
+
+# Ownership
+echo -e "👤 Resetting ownership to www-data..."
+chown -R www-data:www-data /var/www/pterodactyl/*
+
+# Restart queue workers
+echo -e "♻️  Restarting queue workers..."
+php artisan queue:restart
+
+# Back online
+echo -e "✅ Bringing panel back online..."
+php artisan up
+
+# Done
+echo ""
+echo -e "\e[1;32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+echo -e " 🎉  Update completed successfully! Enjoy 🚀"
+echo -e "\e[1;32m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
