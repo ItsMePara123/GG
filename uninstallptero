@@ -1,0 +1,96 @@
+#!/bin/bash
+set -e
+
+# ================================
+#   Pterodactyl Uninstaller Tool
+# ================================
+
+# -------- Functions --------
+
+cleanup_nginx() {
+    echo -e "🧹 \e[1;33mRemoving Nginx configuration for Pterodactyl...\e[0m"
+    if [[ -f "/etc/nginx/sites-enabled/pterodactyl.conf" ]]; then
+        sudo rm -f /etc/nginx/sites-enabled/pterodactyl.conf
+    fi
+    if [[ -f "/etc/nginx/sites-available/pterodactyl.conf" ]]; then
+        sudo rm -f /etc/nginx/sites-available/pterodactyl.conf
+    fi
+    if [[ -f "/etc/nginx/conf.d/pterodactyl.conf" ]]; then
+        sudo rm -f /etc/nginx/conf.d/pterodactyl.conf
+    fi
+
+    if command -v nginx >/dev/null 2>&1; then
+        sudo systemctl restart nginx
+        echo -e "✅ \e[1;32mNginx reloaded.\e[0m"
+    fi
+}
+
+uninstall_panel() {
+    echo -e "🛑 \e[1;31mStopping Panel service...\e[0m"
+    sudo systemctl stop pteroq.service || true
+    sudo systemctl disable pteroq.service || true
+    sudo rm -f /etc/systemd/system/pteroq.service
+    sudo systemctl daemon-reload
+
+    echo -e "🗑️  \e[1;33mRemoving Panel cronjob...\e[0m"
+    sudo crontab -l | grep -v 'php /var/www/pterodactyl/artisan schedule:run' | sudo crontab - || true
+
+    echo -e "🗑️  \e[1;33mRemoving Panel files...\e[0m"
+    sudo rm -rf /var/www/pterodactyl
+
+    echo -e "💾 \e[1;33mDropping Panel MySQL database and user...\e[0m"
+    sudo mysql -u root -e "DROP DATABASE IF EXISTS panel;"
+    sudo mysql -u root -e "DROP USER IF EXISTS 'pterodactyl'@'127.0.0.1';"
+    sudo mysql -u root -e "FLUSH PRIVILEGES;"
+
+    cleanup_nginx
+
+    echo -e "✅ \e[1;32mPanel uninstalled successfully!\e[0m"
+}
+
+uninstall_wings() {
+    echo -e "🛑 \e[1;31mStopping Wings service...\e[0m"
+    sudo systemctl stop wings.service || true
+    sudo systemctl disable wings.service || true
+    sudo rm -f /etc/systemd/system/wings.service
+    sudo systemctl daemon-reload
+
+    echo -e "🗑️  \e[1;33mRemoving Wings files...\e[0m"
+    sudo rm -rf /etc/pterodactyl
+    sudo rm -rf /var/lib/pterodactyl
+    sudo rm -rf /var/log/pterodactyl
+
+    echo -e "✅ \e[1;32mWings uninstalled successfully!\e[0m"
+}
+
+uninstall_both() {
+    uninstall_panel
+    uninstall_wings
+    echo -e "✅ \e[1;32mPanel and Wings fully uninstalled!\e[0m"
+}
+
+# -------- Menu --------
+
+while true; do
+    clear
+    echo -e "\e[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+    echo -e "   🗑️  PTERODACTYL UNINSTALLER MENU"
+    echo -e "\e[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\e[0m"
+    echo ""
+    echo "1) 🗑️  Uninstall Panel"
+    echo "2) 🗑️  Uninstall Wings"
+    echo "3) 🗑️  Uninstall Panel + Wings"
+    echo "0) ❌ Exit"
+    echo "-------------------------------------"
+    read -p "👉 Choose an option: " choice
+
+    case $choice in
+        1) uninstall_panel ;;
+        2) uninstall_wings ;;
+        3) uninstall_both ;;
+        0) echo -e "👋 Exiting uninstaller..."; exit 0 ;;
+        *) echo -e "❌ \e[1;31mInvalid option!\e[0m"; read -p "Press Enter to continue..." ;;
+    esac
+
+    read -p "🔁 Press Enter to return to menu..."
+done
