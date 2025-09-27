@@ -105,7 +105,7 @@ ${BOLD}5. Blueprint Install${RESET}
 ${BOLD}6. Cloudflare${RESET}
 ${BOLD}7. Theme Install${RESET}
 ${BOLD}8. Playit Setup${RESET}
-${BOLD}8. Cloudflare Settings${RESET}
+${BOLD}9. Cloudflare Settings${RESET}
 ${BOLD}10. System Info${RESET}
 ${BOLD}11. Exit${RESET}
 ${BOLD}===============================${RESET}
