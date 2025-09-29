@@ -6,7 +6,7 @@
 set -e
 
 echo "🔄 === Updating system ==="
-sudo apt update -y && sudo apt upgrade -y
+sudo apt update -y
 
 echo "📥 === Cloning Pterodactyl Bot Repository ==="
 git clone https://github.com/ParaNoob123/Pterodactyl-Bot
