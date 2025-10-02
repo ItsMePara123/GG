@@ -7,6 +7,9 @@ set -e
 
 echo "🔄 === Updating system ==="
 sudo apt update -y
+sudo apt install python3
+sudo apt install pip
+clear
 
 echo "📥 === Cloning Pterodactyl Bot Repository ==="
 git clone https://github.com/ParaNoob123/Pterodactyl-Bot
