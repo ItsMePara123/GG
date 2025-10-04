@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# ================= PROTECTED MENU =================
+# Full menu rewritten with AES-encrypted URLs & runtime decryption
+# URLs are stored as scrambled tokens; never appear in plaintext on disk
+
+set -euo pipefail
+IFS=$'\n\t'
+
+# ------------------- Colors -------------------
+RED="\e[31m"
+GREEN="\e[32m"
+YELLOW="\e[33m"
+CYAN="\e[36m"
+WHITE="\e[37m"
+RESET="\e[0m"
+BOLD="\e[1m"
+MAGENTA="\e[35m"
+
+# ------------------- Helpers -------------------
+_noise() { for i in $(seq 1 $((RANDOM % 3 + 1))); do : $((RANDOM%100)); done; }
+
+_b64decode() {
+  printf "%s" "$1" | base64 --decode 2>/dev/null || printf "%s" "$1" | openssl base64 -d 2>/dev/null
+}
+
+_wipe_var() { eval "$1=''; unset $1" || true; }
+
+_read_passphrase() {
+  read -s -p "Enter secret passphrase: " __pp
+  echo; printf "%s" "$__pp"
+  _wipe_var __pp
+}
+
+# ------------------- AES Decryption -------------------
+assemble_token() {
+  local assembled=""
+  for var in "$@"; do
+    val="$(eval "printf \"%s\" \${$var}")"
+    part="$(printf "%s" "$val" | awk '{for(i=length;i>0;i--)printf substr($0,i,1);print ""}')"
+    assembled+="$part"
+    _wipe_var val
+  done
+  printf "%s" "$assembled"
+}
+
+_decrypt_token() {
+  local enc_b64="$1"
+  local pass="$2"
+  dec="$(_b64decode "$enc_b64" | openssl enc -aes-256-cbc -d -pbkdf2 -pass pass:"$pass" 2>/dev/null || true)"
+  printf "%s" "$dec"
+}
+
+# ------------------- Check & Install curl -------------------
+check_curl() {
+  if ! command -v curl &>/dev/null; then
+    echo -e "${RED}${BOLD}Error: curl is not installed.${RESET}"
+    echo -e "${YELLOW}Installing curl...${RESET}"
+    if command -v apt-get &>/dev/null; then sudo apt-get update && sudo apt-get install -y curl
+    elif command -v yum &>/dev/null; then sudo yum install -y curl
+    elif command -v dnf &>/dev/null; then sudo dnf install -y curl
+    else echo -e "${RED}Could not install curl automatically.${RESET}"; exit 1
+    fi
+    echo -e "${GREEN}curl installed successfully!${RESET}"
+  fi
+}
+
+# ------------------- Protected Remote Execution -------------------
+run_protected() {
+  _noise
+  local pass
+  pass="$(_read_passphrase)"
+
+  # ------------------ Place your P_*** chunk variables here ------------------
+  # Example:
+  # P_000='abc...'
+  # P_001='xyz...'
+  # Then assemble token: assembled="$(assemble_token P_000 P_001 ...)"
+
+  assembled="" # <-- replace with assemble_token call with P_*** variables
+
+  if [ -z "$assembled" ]; then
+    echo "Token not assembled. Paste P_*** chunks into script."
+    _wipe_var pass
+    return 2
+  fi
+
+  url="$(_decrypt_token "$assembled" "$pass")"
+  _wipe_var pass
+
+  if [ -z "$url" ]; then
+    echo "Decryption failed (wrong passphrase?)"
+    _wipe_var url
+    return 3
+  fi
+
+  echo -e "${YELLOW}${BOLD}Running protected script...${RESET}"
+  check_curl
+  if ! curl -fsSL "$url" | bash; then
+    echo -e "${RED}✘ Remote execution failed${RESET}"
+    _wipe_var url
+    return 4
+  fi
+
+  _wipe_var url
+  _noise
+  return 0
+}
+
+# ------------------- System Info -------------------
+system_info() {
+  echo -e "${BOLD}SYSTEM INFORMATION${RESET}"
+  echo "Hostname: $(hostname)"
+  echo "User: $(whoami)"
+  echo "Directory: $(pwd)"
+  echo "System: $(uname -srm)"
+  echo "Uptime: $(uptime -p)"
+  echo "Memory: $(free -h | awk '/Mem:/ {print $3\"/\"$2}')"
+  echo "Disk: $(df -h / | awk 'NR==2 {print $3\"/\"$2 \" (\"$5\")\"}')"
+  read -p "Press Enter to continue..."
+}
+
+# ------------------- Cloudflare Settings -------------------
+cloudflare_settings() {
+  clear
+  echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  echo -e " 🌐 ${CYAN}${BOLD}CLOUDFLARE SETTINGS${RESET}"
+  echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+  echo -e " ⚙️ ${GREEN}PANEL SETTINGS${RESET}"
+  echo -e " 🔒 Type : ${CYAN}HTTPS${RESET}"
+  echo -e " 🖥️ Service: ${CYAN}localhost${RESET}\n"
+  echo -e " ⚙️ ${GREEN}NODE SETTINGS${RESET}"
+  echo -e " 🔒 Type : ${CYAN}HTTPS${RESET}"
+  echo -e " 🖥️ Service: ${CYAN}localhost:8080${RESET}\n"
+  echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  read -p "Press Enter to continue..."
+}
+
+# ------------------- Menu -------------------
+show_menu() {
+  clear
+  menu_content=$(cat <<EOF
+${BOLD}========== MAIN MENU ==========${RESET}
+${BOLD}1. Ptero Panel${RESET}
+${BOLD}2. Ptero Wing${RESET}
+${BOLD}3. Ptero Update${RESET}
+${BOLD}4. Ptero Uninstall${RESET}
+${BOLD}5. Blueprint Install${RESET}
+${BOLD}6. Cloudflare${RESET}
+${BOLD}7. Theme Install${RESET}
+${BOLD}8. Playit Setup${RESET}
+${BOLD}9. Cloudflare Settings${RESET}
+${BOLD}10. System Info${RESET}
+${BOLD}11. Ptero Bot${RESET}
+${BOLD}12. Back Up${RESET}
+${BOLD}13. Nginx Reload${RESET}
+${BOLD}14. Ptero Restart${RESET}
+${BOLD}15. Idx Vps Maker${RESET}
+${BOLD}16. Github Vps Maker${RESET}
+${BOLD}0. Exit${RESET}
+${BOLD}===============================${RESET}
+EOF
+)
+  echo -e "${CYAN}${menu_content}${RESET}"
+  echo -ne "${BOLD}Enter your choice [1-16]: ${RESET}"
+  echo -e "$menu_content" > menu.txt
+}
+
+# ------------------- Main Loop -------------------
+while true; do
+  show_menu
+  read -r choice
+  case $choice in
+    1|2|3|4|5|6|7|8|11|12|13|14|15|16)
+      run_protected
+      ;;
+    9)
+      cloudflare_settings
+      ;;
+    10)
+      system_info
+      ;;
+    0)
+      echo "Exiting..."
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}${BOLD}Invalid option!${RESET}"
+      read -p "Press Enter to continue..."
+      ;;
+  esac
+done
