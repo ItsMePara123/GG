@@ -1,0 +1,244 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# =======================
+# WHMCS FULL AUTO INSTALLER
+# By Para
+# PHP 8.1, Nginx, MariaDB, ionCube, Certbot
+# Fully automatic (Option A)
+# =======================
+
+# ---------- Typewriter effect (fast) ----------
+typewriter() {
+  local text="$1"
+  local delay="${2:-0.008}"
+  local i
+  for ((i=0; i<${#text}; i++)); do
+    printf '%s' "${text:$i:1}"
+    sleep "$delay"
+  done
+  printf '\n'
+}
+
+clear
+typewriter "=============================="
+typewriter " 🚀 WHMCS FULL AUTO INSTALLER — BY PARA"
+typewriter "=============================="
+echo ""
+
+# ---------- Inputs ----------
+typewriter "🌐 Enter your domain (example: billing.example.com):"
+read -r DOMAIN
+
+typewriter "🔐 Enter Database password for new user 'whmcsuser'"
+typewriter "⚠️ Use a STRONG & SECURE password (don't use 'test' or '123')."
+read -r DBPASS
+
+typewriter "📁 Enter WHMCS folder name that exists in /root (example: whmcs_v8112):"
+read -r WHMCSFOLDER
+
+# ---------- Verify folder exists ----------
+if [ ! -d "/root/${WHMCSFOLDER}" ]; then
+  typewriter "❌ ERROR: /root/${WHMCSFOLDER} not found. Create it and place your WHMCS zip(s) inside, then re-run."
+  exit 1
+fi
+
+# ---------- Environment pre-check ----------
+typewriter "🔎 Checking required tools..."
+apt update -y
+apt install -y unzip curl wget lsb-release ca-certificates apt-transport-https gnupg2 software-properties-common
+
+# ---------- Install PHP 8.1 + extensions ----------
+typewriter "🐘 Installing PHP 8.1 and extensions..."
+add-apt-repository ppa:ondrej/php -y
+apt update -y
+apt install -y php8.1 php8.1-fpm php8.1-cli php8.1-common php8.1-mysql php8.1-mbstring php8.1-xml \
+php8.1-curl php8.1-gd php8.1-zip php8.1-bcmath php8.1-intl php8.1-imap
+
+systemctl enable --now php8.1-fpm
+
+# ---------- Install Nginx ----------
+typewriter "🌐 Installing Nginx..."
+apt install -y nginx
+systemctl enable --now nginx
+
+# ---------- Install MariaDB ----------
+typewriter "🗄 Installing MariaDB (mysql-compatible server)..."
+apt install -y mariadb-server
+systemctl enable --now mariadb
+
+# Minimal secure setup (non-interactive)
+typewriter "🔐 Running basic mysql_secure_installation steps..."
+# remove anonymous, disallow remote root login, remove test db, reload privileges
+mysql --execute="DELETE FROM mysql.user WHERE User='';"
+mysql --execute="DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost','127.0.0.1','::1');"
+mysql --execute="DROP DATABASE IF EXISTS test;"
+mysql --execute="FLUSH PRIVILEGES;" || true
+
+# ---------- Create DB + user ----------
+DB_NAME="whmcs"
+DB_USER="whmcsuser"
+typewriter "🗃 Creating database and user..."
+mysql --execute="CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql --execute="CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DBPASS}';"
+mysql --execute="GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
+mysql --execute="FLUSH PRIVILEGES;"
+
+# ---------- Prepare target directory ----------
+TARGET_BASE="/var/www/whmcs"
+TARGET_DIR="${TARGET_BASE}/${WHMCSFOLDER}"
+
+typewriter "📦 Preparing web directory: ${TARGET_DIR} ..."
+mkdir -p "${TARGET_DIR}"
+chown -R "$USER:$USER" "${TARGET_BASE}" || true
+
+# ---------- Move ZIP(s) from /root/<folder> to target and extract ----------
+typewriter "📁 Moving ZIP(s) from /root/${WHMCSFOLDER} → ${TARGET_DIR} and extracting..."
+shopt -s nullglob
+ZIPCOUNT=0
+for z in /root/"${WHMCSFOLDER}"/*.zip ; do
+  ZIPCOUNT=$((ZIPCOUNT+1))
+  mv -f "$z" "${TARGET_DIR}/"
+done
+
+if [ "$ZIPCOUNT" -eq 0 ]; then
+  typewriter "❌ No .zip files found in /root/${WHMCSFOLDER}. Place your WHMCS zip there and re-run."
+  exit 1
+fi
+
+cd "${TARGET_DIR}"
+# Extract all zips (if multiple)
+for zipf in *.zip ; do
+  typewriter "📂 Extracting ${zipf} ..."
+  unzip -o "$zipf" -d .
+done
+shopt -u nullglob
+
+# If extracted created nested single folder named 'whmcs' or similar, we leave structure as-is.
+# Ensure config file placeholder exists (if provided)
+if [ -f configuration.php.new ]; then
+  cp -f configuration.php.new configuration.php
+fi
+
+# ---------- Permissions ----------
+typewriter "🔒 Setting permissions (www-data)..."
+chown -R www-data:www-data "${TARGET_DIR}"
+find "${TARGET_DIR}" -type d -exec chmod 755 {} \;
+find "${TARGET_DIR}" -type f -exec chmod 644 {} \;
+
+# Make typical WHMCS writable dirs (create if missing)
+mkdir -p "${TARGET_DIR}/attachments" "${TARGET_DIR}/downloads" "${TARGET_DIR}/templates_c" "${TARGET_DIR}/vendor"
+chown -R www-data:www-data "${TARGET_DIR}/attachments" "${TARGET_DIR}/downloads" "${TARGET_DIR}/templates_c" "${TARGET_DIR}/vendor"
+chmod -R 775 "${TARGET_DIR}/attachments" "${TARGET_DIR}/downloads" "${TARGET_DIR}/templates_c" "${TARGET_DIR}/vendor"
+
+# ---------- Nginx site config ----------
+typewriter "⚙️ Creating Nginx config and enabling site (root -> ${TARGET_DIR})..."
+NGINX_CONF="/etc/nginx/sites-available/whmcs-${DOMAIN}.conf"
+cat > "${NGINX_CONF}" <<EOF
+server {
+    listen 80;
+    server_name ${DOMAIN};
+    root ${TARGET_DIR};
+    index index.php index.html index.htm;
+
+    access_log /var/log/nginx/whmcs_${DOMAIN}_access.log;
+    error_log  /var/log/nginx/whmcs_${DOMAIN}_error.log;
+
+    client_max_body_size 100m;
+    client_body_timeout 120s;
+    sendfile off;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)\$ {
+        expires max;
+        log_not_found off;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+EOF
+
+ln -sf "${NGINX_CONF}" /etc/nginx/sites-enabled/whmcs-${DOMAIN}.conf
+nginx -t
+systemctl reload nginx
+
+# ---------- Install ionCube ----------
+typewriter "🔗 Installing ionCube loaders for PHP 8.1..."
+TMPDIR=$(mktemp -d)
+cd "${TMPDIR}"
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+  IONCUBE_TAR="ioncube_loaders_lin_x86-64.tar.gz"
+else
+  IONCUBE_TAR="ioncube_loaders_lin_x86.tar.gz"
+fi
+wget -q "https://downloads.ioncube.com/loader_downloads/${IONCUBE_TAR}"
+tar -xzf "${IONCUBE_TAR}"
+PHP_EXT_DIR=$(php -i 2>/dev/null | awk -F'=> ' '/extension_dir/ {print $2; exit}' | tr -d ' ')
+# fallback
+if [ -z "$PHP_EXT_DIR" ]; then
+  PHP_EXT_DIR="/usr/lib/php/$(php -r 'echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;')"
+fi
+
+# Copy matching loader file (best-effort)
+LOADER_FILE=$(ls ioncube/ioncube_loader_lin_8.1*.so 2>/dev/null | head -n1 || true)
+if [ -n "$LOADER_FILE" ]; then
+  cp -f "$LOADER_FILE" "${PHP_EXT_DIR}/"
+  # Add zend_extension lines if not present
+  for ini in /etc/php/8.1/cli/php.ini /etc/php/8.1/fpm/php.ini; do
+    if ! grep -q "ioncube_loader_lin_8.1" "$ini" 2>/dev/null; then
+      echo "zend_extension=${PHP_EXT_DIR}/$(basename "$LOADER_FILE")" | tee -a "$ini" >/dev/null
+    fi
+  done
+  systemctl restart php8.1-fpm || true
+else
+  typewriter "⚠️ ionCube loader for PHP 8.1 not found in downloaded package. Please install manually."
+fi
+cd -
+rm -rf "${TMPDIR}"
+
+# ---------- Certbot (Let's Encrypt) ----------
+typewriter "🔐 Installing Certbot and obtaining TLS certificate for ${DOMAIN}..."
+apt install -y certbot python3-certbot-nginx
+# Try to obtain cert non-interactively (will fail if domain not pointed or port blocked)
+if certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos --email admin@${DOMAIN} >/dev/null 2>&1; then
+  typewriter "✅ Certificate obtained and Nginx automatically configured for HTTPS."
+else
+  typewriter "⚠️ Certbot couldn't obtain a certificate automatically. You can run:"
+  typewriter "   certbot --nginx -d ${DOMAIN}"
+fi
+
+# ---------- Cronjob ----------
+typewriter "⏱ Adding WHMCS cronjob (runs every 5 minutes) for www-data..."
+CRON_CMD="*/5 * * * * /usr/bin/php -q ${TARGET_DIR}/crons/cron.php >/dev/null 2>&1"
+( crontab -u www-data -l 2>/dev/null | grep -v -F "${TARGET_DIR}/crons/cron.php" || true; echo "${CRON_CMD}" ) | crontab -u www-data -
+
+# ---------- Final output ----------
+clear
+typewriter "🎉 WHMCS AUTO INSTALLATION FINISHED!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+typewriter " 🌐 Panel Installer URL:"
+echo "   http://${DOMAIN}/install"
+typewriter " 🔐 DB credentials (saved below)"
+echo "   DB NAME: ${DB_NAME}"
+echo "   DB USER: ${DB_USER}"
+echo "   DB PASS: ${DBPASS}"
+typewriter " 📂 Files installed at:"
+echo "   ${TARGET_DIR}"
+typewriter " ⚠️ After completing web installer, DELETE the install folder:"
+echo "   sudo rm -rf ${TARGET_DIR}/install"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+typewriter " 🚀 Enjoy managing your WHMCS panel!"
