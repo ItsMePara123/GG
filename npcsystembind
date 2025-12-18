@@ -1,0 +1,69 @@
+#!/bin/bash
+
+clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo " 🚀 NPC Systemd Binder - Para"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Ask NPC directory
+read -p "👉 Enter NPC directory [default: nps-setup]: " NPC_DIR
+NPC_DIR=${NPC_DIR:-nps-setup}
+
+# Full path (assume under /root)
+NPC_PATH="/root/${NPC_DIR}"
+
+# Ask server details
+read -p "👉 Enter NPS Server IP: " SERVER_IP
+read -p "👉 Enter Connection Port: " CONN_PORT
+read -p "👉 Enter VKEY: " VKEY
+
+# Basic checks
+if [ ! -f "${NPC_PATH}/npc" ]; then
+  echo ""
+  echo "❌ npc binary not found in ${NPC_PATH}"
+  echo "👉 Make sure npc exists and is executable"
+  exit 1
+fi
+
+chmod +x ${NPC_PATH}/npc
+
+echo ""
+echo "🛠 Creating systemd service..."
+
+cat > /etc/systemd/system/npc.service <<EOF
+[Unit]
+Description=NPC Client
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=${NPC_PATH}
+ExecStart=${NPC_PATH}/npc -server ${SERVER_IP}:${CONN_PORT} -vkey ${VKEY}
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🔄 Reloading systemd..."
+systemctl daemon-reload
+
+echo "✅ Enabling NPC service..."
+systemctl enable npc >/dev/null 2>&1
+
+echo "▶️ Starting NPC service..."
+systemctl start npc
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo " ✅ NPC Service Installed!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo " 📂 Directory : ${NPC_PATH}"
+echo " 🌐 Server    : ${SERVER_IP}:${CONN_PORT}"
+echo " 🔑 VKEY      : ${VKEY}"
+echo " 🛠 Manage    : systemctl status npc"
+echo " 🔁 Restart   : systemctl restart npc"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
