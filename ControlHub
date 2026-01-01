@@ -126,7 +126,7 @@ ${BOLD}26. Lxc Install${RESET}
 ${BOLD}27. SSH FIX${RESET}
 ${BOLD}28. Vm Create Docker${RESET}
 ${BOLD}29. Tailscale Install${RESET}
-${BOLD}30. Tailscale Install${RESET}
+${BOLD}30. HVM V3 INSTALLION${RESET}
 ${BOLD}0. Exit${RESET}
 ${BOLD}===============================${RESET}
 EOF
