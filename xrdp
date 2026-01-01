@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+
+###################################################
+# 🚀 XRDP Desktop Installer — Powered By Para
+###################################################
+clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🖥️  XRDP Desktop Environment Auto Installer"
+echo "🔥 By Para"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+sleep 1
+
+# 🌍 Auto-detect Server IP
+IP=$(hostname -I | awk '{print $1}')
+
+echo "🔄 Updating system packages..."
+apt update -y && apt upgrade -y
+
+echo "📦 Installing XRDP + XFCE Desktop..."
+apt install -y xrdp xfce4 xfce4-goodies dbus-x11
+
+echo "⚙️ Enabling XRDP service..."
+systemctl enable xrdp
+systemctl restart xrdp
+
+echo "🔐 Setting root password → root"
+echo -e "root\nroot" | passwd root
+
+echo "🛂 Allowing ROOT login in XRDP..."
+sed -i 's/^AllowRootLogin=false/AllowRootLogin=true/' /etc/xrdp/sesman.ini || true
+
+echo "🔧 Adjusting PAM to allow root login..."
+sed -i 's/^auth required pam_succeed_if.so user != root quiet_success/#&/' /etc/pam.d/xrdp-sesman || true
+
+echo "🎨 Setting XFCE as default session for root..."
+echo "startxfce4" > /root/.xsession
+chmod +x /root/.xsession
+
+echo "🔑 Fixing permissions..."
+adduser xrdp ssl-cert || true
+
+echo "♻️ Restarting XRDP..."
+systemctl restart xrdp
+
+###################################################
+# ⌨ TYPEWRITER FINISH MESSAGE — BY PARA
+###################################################
+type_print() {
+    text="$1"
+    for (( i=0; i<${#text}; i++ )); do
+        echo -n "${text:$i:1}"
+        sleep 0.03
+    done
+    echo ""
+}
+
+echo ""
+type_print "🎉 XRDP Desktop Installed Successfully!"
+type_print "🔗 Server IP  : $IP"
+type_print "👤 Username   : root"
+type_print "🔑 Password   : root"
+type_print "🖥 Session    : Xorg"
+type_print "✨ Powered By Para"
