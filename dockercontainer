@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ========================================================
+# 🐳 Docker Ubuntu VM with noVNC Setup Script (Auto IP)
+# ========================================================
+
+# --- Colors ---
+GREEN="\e[32m"
+YELLOW="\e[33m"
+CYAN="\e[36m"
+RED="\e[31m"
+BOLD="\e[1m"
+RESET="\e[0m"
+
+echo -e "${CYAN}${BOLD}🚀 Docker Ubuntu VM + noVNC Setup${RESET}\n"
+
+# --- Auto detect public IP ---
+SERVER_IP=$(curl -s https://ipinfo.io/ip || curl -s https://api.ipify.org)
+if [[ -z "$SERVER_IP" ]]; then
+    SERVER_IP="127.0.0.1"
+    echo -e "${YELLOW}⚠️  Could not detect public IP. Using localhost.${RESET}"
+fi
+echo -e "${GREEN}🌐 Detected Server IP: ${SERVER_IP}${RESET}\n"
+
+# --- User Input ---
+read -rp "Enter VM name: " VM_NAME
+read -rp "Enter VNC port (e.g., 6081): " VNC_PORT
+read -rp "Enter SSH port (e.g., 2025): " SSH_PORT
+read -rp "Enter VM RAM in MB (e.g., 4096): " VM_RAM
+read -rp "Enter VM CPU cores (e.g., 2): " VM_CPU
+read -rp "Enter VM Disk size (e.g., 20G): " VM_DISK
+
+# --- Confirm ---
+echo -e "\n${YELLOW}⚡ Summary:${RESET}"
+echo -e "VM Name: ${GREEN}${VM_NAME}${RESET}"
+echo -e "VNC Port: ${GREEN}${VNC_PORT}${RESET}"
+echo -e "SSH Port: ${GREEN}${SSH_PORT}${RESET}"
+echo -e "RAM: ${GREEN}${VM_RAM} MB${RESET}"
+echo -e "CPU: ${GREEN}${VM_CPU} cores${RESET}"
+echo -e "Disk: ${GREEN}${VM_DISK}${RESET}"
+echo -e "Server IP: ${GREEN}${SERVER_IP}${RESET}"
+
+read -rp "Continue? (y/n): " CONFIRM
+if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
+    echo -e "${RED}❌ Aborted by user${RESET}"
+    exit 1
+fi
+
+# --- Run Docker Container ---
+echo -e "\n${CYAN}🛠 Starting Docker container...${RESET}"
+
+docker run -d \
+  --name "$VM_NAME" \
+  --device /dev/kvm:/dev/kvm \
+  -p "$VNC_PORT":6080 -p "$SSH_PORT":2222 \
+  -e VM_RAM="$VM_RAM" \
+  -e VM_CPU="$VM_CPU" \
+  -e VM_DISK_SIZE="$VM_DISK" \
+  -v /etc/vmdata:/data \
+  --restart always \
+  hopingboyz/ubuntu22.04
+
+# --- Success Message ---
+echo -e "${GREEN}✅ Docker container '${VM_NAME}' started successfully!${RESET}"
+echo -e "\n${CYAN}💡 Access your VM:${RESET}"
+echo -e "  VNC: http://${SERVER_IP}:${VNC_PORT}"
+echo -e "  SSH: ssh root@${SERVER_IP} -p ${SSH_PORT}"
+
+# --- Forwarding Tip ---
+echo -e "\n${YELLOW}🔹 Tip:${RESET} If you want, you can forward port ${VNC_PORT} in your firewall/router to access noVNC from anywhere."
