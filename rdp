@@ -188,7 +188,7 @@ while true; do
     echo -e "${G}5) ${W}Check status${N}"
     echo -e "${G}6) ${W}Change VNC password${N}"
     echo -e "${G}7) ${W}Install/update browsers${N}"
-    echo -e "${R}9) ${W}Uninstall everything${N}"
+    echo -e "${R}8) ${W}Uninstall everything${N}"
     echo -e "${R}0) ${W}Exit${N}"
     echo -e "${C}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${N}"
     
@@ -202,7 +202,7 @@ while true; do
         5) status_services ;;
         6) change_vnc_password ;;
         7) install_browsers ;;
-        9) uninstall_all ;;
+        8) uninstall_all ;;
         0) echo -e "${G}👋 Goodbye! Made with ❤️ by Para${N}"; exit 0 ;;
         *) echo -e "${R}❌ Invalid option${N}"; sleep 1 ;;
     esac
