@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ========================================================
+# 🚀 LXC + LXD Auto Installer for Ubuntu & Debian
+# ========================================================
+
+# --- Colors & styles ---
+GREEN="\e[32m"
+YELLOW="\e[33m"
+RED="\e[31m"
+CYAN="\e[36m"
+MAGENTA="\e[35m"
+BOLD="\e[1m"
+RESET="\e[0m"
+
+# --- Spinner for progress ---
+_spinner_pid=""
+start_spinner() {
+    local msg="$1"
+    local chars="/-\|"
+    printf "%b %s " "${CYAN}⏳${RESET}" "$msg"
+    (
+        while :; do
+            for c in $chars; do
+                printf "\b%c" "$c"
+                sleep 0.2
+            done
+        done
+    ) &
+    _spinner_pid=$!
+}
+
+stop_spinner() {
+    if [[ -n "$_spinner_pid" ]] && ps -p $_spinner_pid > /dev/null 2>&1; then
+        kill $_spinner_pid >/dev/null 2>&1 || true
+        wait $_spinner_pid 2>/dev/null || true
+        printf "\b${GREEN}✓${RESET}\n"
+        unset _spinner_pid
+    fi
+}
+
+# --- Check root ---
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}❌ Please run as root${RESET}"
+    exit 1
+fi
+
+# --- Detect OS ---
+if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    OS_ID=$ID
+else
+    echo -e "${RED}❌ Cannot detect OS${RESET}"
+    exit 1
+fi
+
+echo -e "${MAGENTA}${BOLD}🌐 Detected OS: $PRETTY_NAME${RESET}"
+
+# --- Ubuntu Installation ---
+install_ubuntu() {
+    start_spinner "Updating & upgrading system..."
+    apt update && apt upgrade -y
+    stop_spinner
+
+    start_spinner "Installing LXC & utilities..."
+    apt install lxc lxc-utils bridge-utils uidmap -y
+    stop_spinner
+
+    start_spinner "Installing snapd..."
+    apt install snapd -y
+    systemctl enable --now snapd.socket
+    stop_spinner
+
+    start_spinner "Installing LXD..."
+    snap install lxd
+    stop_spinner
+
+    start_spinner "Adding user to lxd group..."
+    usermod -aG lxd $SUDO_USER
+    stop_spinner
+
+    echo -e "${YELLOW}⚡ Switching group session (newgrp lxd)${RESET}"
+    newgrp lxd <<'EOF'
+echo -e "${GREEN}🎉 Group session switched!${RESET}"
+EOF
+
+    echo -e "${CYAN}⚙️ Running LXD init...${RESET}"
+    lxd init --auto
+}
+
+# --- Debian Installation ---
+install_debian() {
+    start_spinner "Installing snapd..."
+    apt install snapd -y
+    systemctl enable --now snapd.socket
+    stop_spinner
+
+    if [[ ! -L /snap ]]; then
+        ln -s /var/lib/snapd/snap /snap
+    fi
+
+    start_spinner "Installing LXD..."
+    snap install lxd
+    stop_spinner
+
+    start_spinner "Adding user to lxd group..."
+    usermod -aG lxd $SUDO_USER
+    stop_spinner
+
+    echo -e "${YELLOW}⚡ Switching group session (newgrp lxd)${RESET}"
+    newgrp lxd <<'EOF'
+echo -e "${GREEN}🎉 Group session switched!${RESET}"
+EOF
+
+    echo -e "${CYAN}⚙️ Running LXD init...${RESET}"
+    lxd init --auto
+}
+
+# --- Main Flow ---
+case "$OS_ID" in
+    ubuntu)
+        install_ubuntu
+        ;;
+    debian)
+        install_debian
+        ;;
+    *)
+        echo -e "${RED}❌ Unsupported OS: $OS_ID${RESET}"
+        exit 1
+        ;;
+esac
+
+echo -e "${GREEN}${BOLD}✅ LXC + LXD installation complete!${RESET}"
+echo -e "${CYAN}You can now run 'lxc list' to see your containers.${RESET}"
