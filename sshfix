@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ========================================================
+# 🔧 Auto SSH Fix Script
+# ========================================================
+
+# --- Colors ---
+GREEN="\e[32m"
+YELLOW="\e[33m"
+RED="\e[31m"
+CYAN="\e[36m"
+BOLD="\e[1m"
+RESET="\e[0m"
+
+# --- Spinner ---
+_spinner_pid=""
+start_spinner() {
+    local msg="$1"
+    local chars="/-\|"
+    printf "%b %s " "${CYAN}⏳${RESET}" "$msg"
+    (
+        while :; do
+            for c in $chars; do
+                printf "\b%c" "$c"
+                sleep 0.2
+            done
+        done
+    ) &
+    _spinner_pid=$!
+}
+
+stop_spinner() {
+    if [[ -n "$_spinner_pid" ]] && ps -p $_spinner_pid > /dev/null 2>&1; then
+        kill $_spinner_pid >/dev/null 2>&1 || true
+        wait $_spinner_pid 2>/dev/null || true
+        printf "\b${GREEN}✓${RESET}\n"
+        unset _spinner_pid
+    fi
+}
+
+# --- Check root ---
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}❌ Please run as root${RESET}"
+    exit 1
+fi
+
+# --- Backup existing SSH config ---
+start_spinner "Backing up existing SSH config..."
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak.$(date +%s)
+stop_spinner
+echo -e "${GREEN}💾 Backup created at /etc/ssh/sshd_config.bak${RESET}"
+
+# --- Update SSH config ---
+start_spinner "Updating SSH configuration..."
+cat <<'EOF' > /etc/ssh/sshd_config
+# SSH LOGIN SETTINGS
+PasswordAuthentication yes
+PermitRootLogin yes
+PubkeyAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# SFTP SETTINGS
+Subsystem sftp /usr/lib/openssh/sftp-server
+EOF
+stop_spinner
+echo -e "${GREEN}⚙️ SSH configuration updated!${RESET}"
+
+# --- Restart SSH service ---
+start_spinner "Restarting SSH service..."
+if systemctl restart ssh 2>/dev/null; then
+    stop_spinner
+elif service ssh restart 2>/dev/null; then
+    stop_spinner
+else
+    stop_spinner
+    echo -e "${YELLOW}⚠️ Could not restart SSH service automatically.${RESET}"
+fi
+
+# --- Set root password ---
+echo -e "${YELLOW}${BOLD}⚠️  Set a new root password:${RESET}"
+passwd root
+
+echo -e "${GREEN}${BOLD}✅ SSH fix completed!${RESET}"
+echo -e "${CYAN}You can now log in as root via SSH using the password you just set.${RESET}"
