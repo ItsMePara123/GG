@@ -1,0 +1,94 @@
+#!/bin/bash
+# RyzenCloud Advanced MOTD Installer
+
+echo "🔧 Installing RyzenCloud Custom MOTD..."
+
+# Disable default MOTD spam (safe)
+for f in /etc/update-motd.d/*; do
+  case "$(basename "$f")" in
+    00-header|10-help-text|50-motd-news)
+      chmod -x "$f" 2>/dev/null
+      ;;
+  esac
+done
+
+# Create MOTD
+cat << 'EOF' > /etc/update-motd.d/00-ryzencloud
+#!/bin/bash
+
+# ===== Colors =====
+CYAN="\e[38;5;45m"
+GREEN="\e[38;5;82m"
+YELLOW="\e[38;5;220m"
+BLUE="\e[38;5;51m"
+RESET="\e[0m"
+
+# ===== System Info =====
+HOSTNAME=$(hostname)
+OS=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
+KERNEL=$(uname -r)
+UPTIME=$(uptime -p | sed 's/up //')
+
+# CPU Load
+CPU_LOAD=$(awk '{print $1}' /proc/loadavg)
+
+# Memory
+MEM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
+MEM_USED=$(free -m | awk '/Mem:/ {print $3}')
+MEM_PERC=$((MEM_USED * 100 / MEM_TOTAL))
+
+# Disk
+DISK_USED=$(df -h / | awk 'NR==2 {print $3}')
+DISK_TOTAL=$(df -h / | awk 'NR==2 {print $2}')
+DISK_PERC=$(df / | awk 'NR==2 {print $5}')
+
+# Network
+IP=$(hostname -I | awk '{print $1}')
+
+# Users & Processes
+USERS=$(who | wc -l)
+PROCS=$(ps -e --no-headers | wc -l)
+
+# ===== Logo =====
+echo -e "${GREEN}"
+cat << "LOGO"
+
+_____                     
+ |  __ \                    
+ | |__) |   _ _______ _ __  
+ |  _  / | | |_  / _ \ '_ \ 
+ | | \ \ |_| |/ /  __/ | | |
+ |_|  \_\__, /___\___|_| |_|
+         __/ |              
+        |___/               
+
+LOGO
+echo -e "${RESET}"
+
+# ===== Welcome =====
+echo -e "${GREEN}Welcome to RyzenCloud Datacenter 🚀${RESET}"
+echo -e "${BLUE}High Performance • Reliable • Secure${RESET}\n"
+
+# ===== Stats =====
+echo -e "${CYAN}📊 System Information${RESET}"
+printf "  ${YELLOW}Hostname     :${RESET} %s\n" "$HOSTNAME"
+printf "  ${YELLOW}OS           :${RESET} %s\n" "$OS"
+printf "  ${YELLOW}Kernel       :${RESET} %s\n" "$KERNEL"
+printf "  ${YELLOW}CPU Load     :${RESET} %s\n" "$CPU_LOAD"
+printf "  ${YELLOW}Memory Usage :${RESET} %sMB / %sMB (%s%%)\n" "$MEM_USED" "$MEM_TOTAL" "$MEM_PERC"
+printf "  ${YELLOW}Disk Usage   :${RESET} %s / %s (%s)\n" "$DISK_USED" "$DISK_TOTAL" "$DISK_PERC"
+printf "  ${YELLOW}Processes    :${RESET} %s\n" "$PROCS"
+printf "  ${YELLOW}Users Logged :${RESET} %s\n" "$USERS"
+printf "  ${YELLOW}IP Address   :${RESET} %s\n" "$IP"
+printf "  ${YELLOW}Uptime       :${RESET} %s\n\n" "$UPTIME"
+
+# ===== Footer =====
+echo -e "${GREEN}Support:${RESET} support@ryzencloud.fun"
+echo -e "${GREEN}Website:${RESET} https://ryzencloud.fun"
+echo -e "${CYAN}Quality Wise — No Compromise 😄${RESET}"
+EOF
+
+chmod +x /etc/update-motd.d/00-ryzencloud
+
+echo "🎉 RyzenCloud MOTD Installed Successfully!"
+echo "➡ Reconnect SSH to see the new MOTD."
