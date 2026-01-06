@@ -1,0 +1,63 @@
+#!/bin/bash
+# RyzenCloud Blue MOTD Installer
+
+echo "🔧 Installing Blue-Themed Custom MOTD..."
+
+# Disable default Ubuntu MOTD scripts
+chmod -x /etc/update-motd.d/* 2>/dev/null
+
+# Create the dynamic blue stats MOTD script
+cat << 'EOF' > /etc/update-motd.d/00-RyzenCloud-Blue
+#!/bin/bash
+
+# Colors
+BLUE="\e[38;5;45m"
+CYAN="\e[38;5;51m"
+LIGHT_BLUE="\e[38;5;81m"
+DARK_BLUE="\e[38;5;19m"
+RESET="\e[0m"
+
+# System Stats
+LOAD=$(uptime | awk -F 'load average:' '{ print $2 }' | awk '{ print $1 }')
+MEM_TOTAL=$(free -m | awk '/Mem:/ {print $2}')
+MEM_USED=$(free -m | awk '/Mem:/ {print $3}')
+MEM_PERC=$((MEM_USED * 100 / MEM_TOTAL))
+DISK_USED=$(df -h / | awk 'NR==2 {print $3}')
+DISK_TOTAL=$(df -h / | awk 'NR==2 {print $2}')
+DISK_PERC=$(df -h / | awk 'NR==2 {print $5}')
+PROC=$(ps aux | wc -l)
+USERS=$(who | wc -l)
+IP=$(hostname -I | awk '{print $1}')
+UPTIME=$(uptime -p | sed 's/up //')
+
+# Header + Logo
+echo -e "${DARK_BLUE}┌──────────────────────────────────────────────────────────────┐${RESET}"
+echo -e "${BLUE}  _______     ______________ _   _ ${RESET}"
+echo -e "${LIGHT_BLUE} |  __ \ \   / /___  /  ____| \ | |${RESET}"
+echo -e "${CYAN} | |__) \ \_/ /   / /| |__  |  \| |${RESET}"
+echo -e "${LIGHT_BLUE} |  _  / \   /   / / |  __| | . \` |${RESET}"
+echo -e "${BLUE} | | \ \  | |   / /__| |____| |\  |${RESET}"
+echo -e "${CYAN} |_|  \_\ |_|  /_____|______|_| \_|${RESET}"
+echo -e "${DARK_BLUE}└──────────────────────────────────────────────────────────────┘${RESET}"
+
+echo -e "${CYAN}      Welcome to ${BLUE}RyzenCloud Datacenter ⚡${RESET}\n"
+
+# System Stats Table
+echo -e "${BLUE}📊 System Information:${RESET} (as of $(date))\n"
+printf "  ${CYAN}CPU Load     :${RESET} %s\n" "$LOAD"
+printf "  ${CYAN}Memory Usage :${RESET} %sMB / %sMB (%s%%)\n" "$MEM_USED" "$MEM_TOTAL" "$MEM_PERC"
+printf "  ${CYAN}Disk Usage   :${RESET} %s / %s (%s)\n" "$DISK_USED" "$DISK_TOTAL" "$DISK_PERC"
+printf "  ${CYAN}Processes    :${RESET} %s\n" "$PROC"
+printf "  ${CYAN}Users Logged :${RESET} %s\n" "$USERS"
+printf "  ${CYAN}IP Address   :${RESET} %s\n" "$IP"
+printf "  ${CYAN}Uptime       :${RESET} %s\n\n" "$UPTIME"
+
+echo -e "${LIGHT_BLUE}Support: ${RESET}support@ryzencloud.fun"
+echo -e "${LIGHT_BLUE}Website: ${RESET}ryzencloud.fun"
+echo -e "${BLUE}🔥 Performance Is Our Attitude 🔥${RESET}"
+EOF
+
+chmod +x /etc/update-motd.d/00-RyzenCloud-Blue
+
+echo "🎉 Blue RyzenCloud MOTD Installed Successfully!"
+echo "➡ Reconnect SSH to see the new MOTD."
