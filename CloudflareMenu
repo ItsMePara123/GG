@@ -1,0 +1,92 @@
+#!/bin/bash
+set -e
+
+# ================= COLORS =================
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# ================= BANNER =================
+cloudflare_banner() {
+clear
+echo -e "${MAGENTA}${BOLD}"
+cat << "EOF"
+╔════════════════════════════════════════════╗
+║        🌐 CLOUDFLARE MENU 🌐               ║
+╚════════════════════════════════════════════╝
+EOF
+echo -e "${RESET}"
+}
+
+# ================= CLOUDFLARE INSTALL =================
+cloudflare_install() {
+clear
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo -e "   🌐 ${YELLOW}CLOUDFLARED INSTALLER${RESET} 🌐"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+
+echo -e "${GREEN}[+] Creating keyrings directory...${RESET}"
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+
+echo -e "${GREEN}[+] Adding Cloudflare GPG key...${RESET}"
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg \
+ | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+
+echo -e "${GREEN}[+] Adding Cloudflare repository...${RESET}"
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' \
+ | sudo tee /etc/apt/sources.list.d/cloudflared.list >/dev/null
+
+echo -e "${GREEN}[+] Installing cloudflared...${RESET}"
+sudo apt-get update && sudo apt-get install -y cloudflared
+
+if command -v cloudflared >/dev/null 2>&1; then
+    echo -e "\n${GREEN}✅ Cloudflared installed successfully!${RESET}"
+else
+    echo -e "\n${RED}❌ Installation failed.${RESET}"
+fi
+
+read -p "⬅️  Press Enter to return to menu..."
+}
+
+# ================= CLOUDFLARE SETTINGS =================
+cloudflare_settings() {
+clear
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo -e " 🌐 ${CYAN}${BOLD}CLOUDFLARE SETTINGS${RESET}"
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+
+echo -e " ⚙️ ${GREEN}PANEL SETTINGS${RESET}"
+echo -e " 🔒 Type    : ${CYAN}HTTPS${RESET}"
+echo -e " 🖥️ Service : ${CYAN}localhost${RESET}\n"
+
+echo -e " ⚙️ ${GREEN}NODE SETTINGS${RESET}"
+echo -e " 🔒 Type    : ${CYAN}HTTPS${RESET}"
+echo -e " 🖥️ Service : ${CYAN}localhost:8080${RESET}\n"
+
+echo -e "${MAGENTA}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+read -p "⬅️  Press Enter to return to menu..."
+}
+
+# ================= MENU LOOP =================
+while true; do
+    cloudflare_banner
+    echo -e "${BLUE}━━━━━━━━━━ 🌐 CLOUDFLARE MENU 🌐 ━━━━━━━━━━${RESET}"
+    echo -e "${CYAN} 1) ☁️ Cloudflare Install${RESET}"
+    echo -e "${CYAN} 2) ⚙️ Cloudflare Settings${RESET}"
+    echo -e "${RED}  0) 🚪 Exit${RESET}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -ne "${YELLOW}${BOLD}➤ Select option [0-2]: ${RESET}"
+    read choice
+
+    case $choice in
+        1) cloudflare_install ;;
+        2) cloudflare_settings ;;
+        0) exit 0 ;;
+        *) echo -e "${RED}❌ Invalid option!${RESET}"; sleep 1 ;;
+    esac
+done
