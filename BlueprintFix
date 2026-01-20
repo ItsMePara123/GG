@@ -1,0 +1,125 @@
+#!/bin/bash
+# ====================================================
+#        🌟 BLUEPRINT FRAMEWORK INSTALLER 🌟
+#        Made by Para - github.com/ParaNoob123
+# ====================================================
+
+# ================= COLORS =================
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# ================= TYPEWRITER EFFECT =================
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.02}"
+    for (( i=0; i<${#text}; i++ )); do
+        echo -n "${text:$i:1}"
+        sleep $delay
+    done
+    echo
+}
+
+# ================= HEADER =================
+banner() {
+    clear
+    echo -e "${MAGENTA}${BOLD}"
+    cat << "EOF"
+╔════════════════════════════════════════════╗
+║        🟦 BLUEPRINT INSTALLER 🟦           ║
+╚════════════════════════════════════════════╝
+EOF
+    echo -e "${NC}"
+}
+
+# ================= VARIABLES =================
+PTERO_DIR="/var/www/pterodactyl"
+
+# ================= PANEL UPDATE =================
+update_panel() {
+    typewrite "⚡ Updating Pterodactyl Panel..." 0.03
+    cd "$PTERO_DIR" || { echo -e "${RED}❌ Pterodactyl directory not found!${NC}"; exit 1; }
+
+    commands=(
+        "php artisan down"
+        "curl -L https://github.com/pterodactyl/panel/releases/download/v1.11.11/panel.tar.gz | tar -xzv"
+        "chmod -R 755 storage/* bootstrap/cache"
+        "composer install --no-dev --optimize-autoloader"
+        "php artisan view:clear"
+        "php artisan config:clear"
+        "php artisan migrate --seed --force"
+        "chown -R www-data:www-data /var/www/pterodactyl/*"
+        "php artisan queue:restart"
+        "php artisan up"
+    )
+
+    for i in "${!commands[@]}"; do
+        echo -e "${YELLOW}[Panel $((i+1))/10]${NC} ${commands[$i]}"
+        eval "${commands[$i]}"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ Panel update failed at step $((i+1)). Aborting.${NC}"
+            exit 1
+        fi
+    done
+
+    typewrite "✅ Panel updated successfully!" 0.03
+}
+
+# ================= BLUEPRINT INSTALL =================
+install_blueprint() {
+    typewrite "🌟 Starting Blueprint Installation..." 0.03
+
+    # Dependencies
+    typewrite "🔧 Installing dependencies..." 0.01
+    sudo apt-get update
+    sudo apt-get install -y ca-certificates curl gnupg unzip wget zip git nodejs npm
+
+    # Node.js setup
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+    sudo apt-get update
+    sudo apt-get install -y nodejs
+    sudo npm i -g yarn
+
+    # Navigate to Pterodactyl
+    cd "$PTERO_DIR" || { echo -e "${RED}❌ Pterodactyl directory not found!${NC}"; exit 1; }
+
+    # Download Blueprint
+    typewrite "⬇️ Downloading latest Blueprint release..." 0.01
+    wget "$(curl -s https://api.github.com/repos/BlueprintFramework/framework/releases/latest | grep 'browser_download_url' | grep 'release.zip' | cut -d '"' -f 4)" -O "$PTERO_DIR/release.zip" || { echo -e "${RED}❌ Failed to download release.zip${NC}"; exit 1; }
+
+    # Unzip
+    typewrite "📦 Extracting Blueprint files..." 0.01
+    unzip -o release.zip
+
+    # Yarn dependencies
+    typewrite "📦 Installing Node dependencies..." 0.01
+    yarn install
+
+    # .blueprintrc setup
+    typewrite "⚙️ Configuring Blueprint..." 0.01
+    touch "$PTERO_DIR/.blueprintrc"
+    echo 'WEBUSER="www-data";
+OWNERSHIP="www-data:www-data";
+USERSHELL="/bin/bash";' > "$PTERO_DIR/.blueprintrc"
+
+    # Permissions
+    chmod +x "$PTERO_DIR/blueprint.sh"
+
+    # Run Blueprint
+    typewrite "🚀 Running Blueprint installer..." 0.01
+    bash "$PTERO_DIR/blueprint.sh"
+
+    typewrite "🎉 Blueprint installed successfully!${NC}" 0.03
+}
+
+# ================= MAIN =================
+banner
+update_panel
+install_blueprint
