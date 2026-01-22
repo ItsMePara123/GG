@@ -1,0 +1,216 @@
+#!/bin/bash
+
+###################################################
+# 🔥 MYTHICALDASH REMASTERED — AUTO INSTALLER 🔥
+# ✨ Clean • Fast • Powerful • RyzenCloud Style ✨
+###################################################
+
+clear
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🚀 MythicalDash Remastered Auto Installer 🚀"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+read -p "🌐 Enter your Domain (eg: panel.example.com): " DOMAIN
+
+if [ -z "$DOMAIN" ]; then
+    echo ""
+    echo "❌ Domain is required!"
+    echo "⚠️  Install aborted. Run again properly."
+    exit 1
+fi
+
+echo ""
+echo "✅ Domain locked: 🔗 $DOMAIN"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+sleep 2
+
+###################################################
+# 🧠 AUTO OS DETECTION
+###################################################
+echo "🔍 Detecting OS..."
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=$ID
+else
+    echo "❌ OS detection failed!"
+    exit 1
+fi
+
+if [[ "$OS" != "ubuntu" && "$OS" != "debian" ]]; then
+    echo "🚫 Only Ubuntu / Debian supported"
+    exit 1
+fi
+echo "✅ OS detected: $OS"
+sleep 1
+
+###################################################
+# 🔄 SYSTEM UPDATE & DEPENDENCIES
+###################################################
+echo "📦 Updating system & installing dependencies..."
+apt update && apt upgrade -y
+
+apt -y install software-properties-common curl apt-transport-https \
+ca-certificates gnupg git unzip zip tar cron make redis-server \
+nginx mariadb-server dos2unix screen openssl
+
+if [ "$OS" == "ubuntu" ]; then
+    add-apt-repository -y ppa:ondrej/php
+    apt-add-repository universe
+else
+    curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php.gpg
+    echo "deb [signed-by=/usr/share/keyrings/php.gpg] https://packages.sury.org/php/ $VERSION_CODENAME main" \
+    > /etc/apt/sources.list.d/php.list
+fi
+
+apt update
+apt -y install php8.3 php8.3-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip,redis}
+
+systemctl enable --now cron redis-server
+echo "✅ Dependencies installed"
+sleep 1
+
+###################################################
+# 🎼 COMPOSER INSTALL
+###################################################
+echo "🎼 Installing Composer..."
+curl -sS https://getcomposer.org/installer | php -- \
+--install-dir=/usr/local/bin --filename=composer
+echo "✅ Composer ready"
+
+###################################################
+# 📥 DOWNLOAD & INSTALL MYTHICALDASH
+###################################################
+echo "⬇️ Downloading MythicalDash..."
+mkdir -p /var/www/mythicaldash-v3
+cd /var/www/mythicaldash-v3
+
+curl -Lo MythicalDash.zip \
+https://github.com/MythicalLTD/MythicalDash/releases/latest/download/MythicalDash.zip
+
+unzip -o MythicalDash.zip
+chown -R www-data:www-data /var/www/mythicaldash-v3
+
+cd backend
+COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
+
+###################################################
+# 🗄️ DATABASE SETUP
+###################################################
+echo "🗄️ Setting up database..."
+DB="mythicaldash_remastered"
+USER="mythicaldash_remastered"
+PASS="1234"
+
+mariadb -e "CREATE DATABASE $DB;"
+mariadb -e "CREATE USER '$USER'@'127.0.0.1' IDENTIFIED BY '$PASS';"
+mariadb -e "GRANT ALL PRIVILEGES ON $DB.* TO '$USER'@'127.0.0.1';"
+mariadb -e "FLUSH PRIVILEGES;"
+echo "✅ Database ready"
+
+###################################################
+# ⚙️ PRODUCTION BUILD
+###################################################
+cd /var/www/mythicaldash-v3
+make set-prod
+echo "🚀 Production mode enabled"
+
+###################################################
+# ⏱️ CRON JOBS
+###################################################
+echo "⏱️ Installing cron jobs..."
+(crontab -l 2>/dev/null | grep -v mythicaldash ; echo \
+"* * * * * bash /var/www/mythicaldash-v3/backend/storage/cron/runner.bash >/dev/null 2>&1"; \
+"* * * * * php /var/www/mythicaldash-v3/backend/storage/cron/runner.php >/dev/null 2>&1") | crontab -
+
+###################################################
+# 🧠 PANEL SETUP
+###################################################
+clear
+php mythicaldash setup
+php mythicaldash migrate
+php mythicaldash pterodactyl configure
+
+###################################################
+# 🔐 SELF-SIGNED SSL
+###################################################
+echo "🔐 Generating SSL..."
+mkdir -p /etc/certs/MythicalDash
+cd /etc/certs/MythicalDash
+
+openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 \
+-subj "/C=NA/ST=NA/L=NA/O=MythicalDash/CN=$DOMAIN" \
+-keyout privkey.pem -out fullchain.pem
+
+###################################################
+# 🌐 NGINX CONFIG
+###################################################
+echo "🌐 Configuring Nginx..."
+CONF="/etc/nginx/sites-available/MythicalDash.conf"
+
+cat <<EOF > $CONF
+server {
+    listen 80;
+    server_name $DOMAIN;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name $DOMAIN;
+
+    root /var/www/mythicaldash-v3/frontend/dist;
+    index index.html;
+
+    ssl_certificate /etc/certs/MythicalDash/fullchain.pem;
+    ssl_certificate_key /etc/certs/MythicalDash/privkey.pem;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:6000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /i/ {
+        proxy_pass http://localhost:6000;
+        proxy_set_header Host \$host;
+    }
+}
+
+server {
+    listen 6000;
+    root /var/www/mythicaldash-v3/backend/public;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    }
+}
+EOF
+
+ln -s $CONF /etc/nginx/sites-enabled/
+systemctl restart nginx
+chown -R www-data:www-data /var/www/mythicaldash-v3
+
+###################################################
+# 👑 ADMIN CREATION
+###################################################
+php mythicaldash makeAdmin
+
+###################################################
+# 🎉 DONE
+###################################################
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🎉 MythicalDash Installed Successfully!"
+echo "🌍 URL: https://$DOMAIN"
+echo "👑 Login & rule your panel like a king 👑"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
