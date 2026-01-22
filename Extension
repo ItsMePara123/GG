@@ -1,0 +1,156 @@
+#!/bin/bash
+# ==================================================
+# 🎨 PTERODACTYL THEME & TOOLS MANAGER
+# Clean UI • Emoji Styled • Blueprint Based
+# 👑 Credits: Para
+# ==================================================
+
+# ---------------- COLORS ----------------
+RED="\e[1;31m"
+GREEN="\e[1;32m"
+YELLOW="\e[1;33m"
+CYAN="\e[1;36m"
+MAGENTA="\e[1;35m"
+GRAY="\e[1;90m"
+RESET="\e[0m"
+
+line() {
+    echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+}
+
+pause() {
+    sleep 2
+}
+
+# ===== UNINSTALL SUB-MENU =====
+uninstall_menu() {
+    while true; do
+        clear
+        line
+        echo -e "${CYAN}🗑️  UNINSTALL MENU${RESET}"
+        echo -e "${GRAY}Remove installed themes & tools safely${RESET}"
+        line
+        echo -e "${YELLOW}1)${RESET} 🧹 Remove Nebula Theme"
+        echo -e "${YELLOW}2)${RESET} 🧹 Remove Euphoria Theme"
+        echo -e "${YELLOW}3)${RESET} 🧹 Remove Add-Tool Package"
+        echo -e "${YELLOW}0)${RESET} ⬅ Back"
+        line
+        read -p "➤ Select option: " uopt
+
+        case "$uopt" in
+            1)
+                echo -e "${RED}🧹 Removing Nebula…${RESET}"
+                cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+                blueprint -r nebula
+                echo -e "${GREEN}✅ Nebula removed successfully${RESET}"
+                pause
+            ;;
+            2)
+                echo -e "${RED}🧹 Removing Euphoria…${RESET}"
+                cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+                blueprint -r euphoriatheme
+                echo -e "${GREEN}✅ Euphoria removed successfully${RESET}"
+                pause
+            ;;
+            3)
+                echo -e "${RED}🧹 Removing Add-Tool package…${RESET}"
+                cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+                blueprint -r versionchanger
+                blueprint -r mcplugins
+                blueprint -r sagaminecraftplayermanager
+                echo -e "${GREEN}✅ Add-Tool package removed${RESET}"
+                pause
+            ;;
+            0)
+                break
+            ;;
+            *)
+                echo -e "${RED}❌ Invalid option. Try again.${RESET}"
+                sleep 1
+            ;;
+        esac
+    done
+}
+
+# ===== MAIN MENU =====
+while true; do
+    clear
+    line
+    echo -e "${CYAN}🎨 THEME & TOOLS MANAGER${RESET}"
+    echo -e "${GRAY}Powered by Blueprint • Maintained by Para${RESET}"
+    line
+    echo -e "${YELLOW}1)${RESET} 🌌 Nebula Theme ${CYAN}(Auto Install)${RESET}"
+    echo -e "${YELLOW}2)${RESET} 🌈 Euphoria Theme ${CYAN}(Auto Install)${RESET}"
+    echo -e "${YELLOW}3)${RESET} 🗑️ Uninstall Menu"
+    echo -e "${YELLOW}4)${RESET} 🧩 Add-Tool Package ${CYAN}(Auto Install)${RESET}"
+    echo -e "${YELLOW}0)${RESET} 🚪 Exit"
+    line
+    read -p "➤ Select option: " opt
+
+    case "$opt" in
+
+        # ===== NEBULA INSTALL =====
+        1)
+            echo -e "${GREEN}🌌 Installing Nebula Theme…${RESET}"
+            cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+
+            wget -q https://github.com/ParaNoob123/Blueprint/raw/refs/heads/main/nebula.blueprint
+            yes "" | blueprint -i nebula
+            rm -f nebula.blueprint
+
+            echo -e "${GREEN}🚀 Nebula installed successfully!${RESET}"
+            pause
+        ;;
+
+        # ===== EUPHORIA INSTALL =====
+        2)
+            echo -e "${GREEN}🌈 Installing Euphoria Theme…${RESET}"
+            cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+
+            wget -q https://github.com/ParaNoob123/Blueprint/raw/refs/heads/main/europietheme.blueprint
+            blueprint -i euphoriatheme
+            rm -f euphoriatheme.blueprint
+
+            echo -e "${GREEN}✨ Euphoria installed successfully!${RESET}"
+            pause
+        ;;
+
+        # ===== UNINSTALL =====
+        3)
+            uninstall_menu
+        ;;
+
+        # ===== ADD TOOL INSTALL =====
+        4)
+            echo -e "${GREEN}🧩 Installing Add-Tool package…${RESET}"
+            cd /var/www/pterodactyl || { echo -e "${RED}❌ Panel path not found!${RESET}"; pause; continue; }
+
+            wget -q https://github.com/ParaNoob123/Blueprint/raw/refs/heads/main/versionchanger.blueprint
+            wget -q https://github.com/ParaNoob123/Blueprint/raw/refs/heads/main/mcplugins.blueprint
+            wget -q https://github.com/ParaNoob123/Blueprint/raw/refs/heads/main/minecraftplayermanager.blueprint
+
+            blueprint -i versionchanger
+            blueprint -i mcplugins
+            blueprint -i minecraftplayermanager
+
+            rm -f *.blueprint
+
+            echo -e "${GREEN}🛠️ Add-Tool package installed successfully!${RESET}"
+            pause
+        ;;
+
+        # ===== EXIT =====
+        0)
+            line
+            echo -e "${CYAN}👋 Goodbye, legend.${RESET}"
+            echo -e "${GRAY}Credits: Para${RESET}"
+            line
+            exit 0
+        ;;
+
+        *)
+            echo -e "${RED}❌ Invalid option. Try again.${RESET}"
+            sleep 1
+        ;;
+    esac
+done
