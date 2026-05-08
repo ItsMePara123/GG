@@ -1,0 +1,217 @@
+#!/bin/bash
+
+clear
+
+# ===== TYPEWRITER EFFECT =====
+typewriter() {
+    text="$1"
+    speed="${2:-0.02}"
+    for (( i=0; i<${#text}; i++ )); do
+        echo -ne "${text:$i:1}"
+        sleep $speed
+    done
+    echo
+}
+
+# ===== COLORS =====
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+YELLOW='\033[1;33m'
+MAGENTA='\033[1;35m'
+NC='\033[0m'
+
+echo -e "${MAGENTA}"
+cat << "EOF"
+
+██████╗  █████╗ ██████╗  █████╗ 
+██╔══██╗██╔══██╗██╔══██╗██╔══██╗
+██████╔╝███████║██████╔╝███████║
+██╔═══╝ ██╔══██║██╔══██╗██╔══██║
+██║     ██║  ██║██║  ██║██║  ██║
+╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
+
+EOF
+echo -e "${NC}"
+
+typewriter "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" 0.003
+typewriter "${GREEN}      VPS HARDWARE SPOOFER${NC}" 0.03
+typewriter "${YELLOW}          Made By PARA${NC}" 0.04
+typewriter "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" 0.003
+
+echo ""
+
+read -p "Enter RAM to spoof (GB): " RAMGB
+
+echo ""
+echo "Select CPU model:"
+echo "1) AMD Ryzen 9 9950X3D"
+echo "2) AMD Ryzen 9 7950X"
+echo "3) AMD Ryzen 7 7800X3D"
+echo "4) Intel Core i9-14900K"
+echo "5) Intel Core i9-13900K"
+echo "6) Intel Core i7-13700K"
+echo "7) Intel Xeon Platinum 8480+"
+echo "8) Intel Xeon Gold 6430"
+echo "9) Intel Xeon E5-2699 v4"
+echo "10) AMD EPYC 9654"
+echo "11) AMD EPYC 7763"
+echo "12) Snapdragon 8 Elite Gen 5"
+echo "13) Apple M3 Ultra"
+echo "14) Intel Xeon W9-3495X"
+echo "15) Custom CPU Name"
+
+read -p "Choose CPU (1-15): " CPUCHOICE
+
+case $CPUCHOICE in
+1) CPUNAME="AMD Ryzen 9 9950X3D";;
+2) CPUNAME="AMD Ryzen 9 7950X";;
+3) CPUNAME="AMD Ryzen 7 7800X3D";;
+4) CPUNAME="Intel Core i9-14900K";;
+5) CPUNAME="Intel Core i9-13900K";;
+6) CPUNAME="Intel Core i7-13700K";;
+7) CPUNAME="Intel Xeon Platinum 8480+";;
+8) CPUNAME="Intel Xeon Gold 6430";;
+9) CPUNAME="Intel Xeon E5-2699 v4";;
+10) CPUNAME="AMD EPYC 9654";;
+11) CPUNAME="AMD EPYC 7763";;
+12) CPUNAME="Snapdragon 8 Elite Gen 5";;
+13) CPUNAME="Apple M3 Ultra";;
+14) CPUNAME="Intel Xeon W9-3495X";;
+15) read -p "Enter custom CPU: " CPUNAME;;
+*) CPUNAME="AMD Ryzen 9 9950X3D";;
+esac
+
+echo ""
+read -p "Enter number of CPU cores: " CORES
+
+RAMKB=$((RAMGB*1024*1024))
+
+mkdir -p /opt/sysspoof
+
+typewriter "${GREEN}[+] Creating fake meminfo...${NC}" 0.01
+
+cat > /opt/sysspoof/meminfo <<EOF
+MemTotal:       ${RAMKB} kB
+MemFree:        $((RAMKB-1000000)) kB
+MemAvailable:   $((RAMKB-1000000)) kB
+Buffers:        200000 kB
+Cached:         400000 kB
+SwapTotal:      0 kB
+SwapFree:       0 kB
+EOF
+
+typewriter "${GREEN}[+] Creating fake cpuinfo...${NC}" 0.01
+
+rm -f /opt/sysspoof/cpuinfo
+
+for ((i=0;i<CORES;i++))
+do
+cat >> /opt/sysspoof/cpuinfo <<EOF
+processor   : $i
+vendor_id   : AuthenticAMD
+cpu family  : 26
+model       : 68
+model name  : $CPUNAME
+stepping    : 1
+cpu MHz     : 4300.000
+cache size  : 1024 KB
+physical id : 0
+siblings    : $CORES
+core id     : $i
+cpu cores   : $CORES
+apicid      : $i
+initial apicid  : $i
+fpu     : yes
+fpu_exception   : yes
+cpuid level : 16
+wp      : yes
+flags       : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr
+bogomips    : 8600.00
+
+EOF
+done
+
+typewriter "${GREEN}[+] Setting up mounts...${NC}" 0.01
+
+cat > /etc/systemd/system/proc-cpuinfo.mount <<EOF
+[Unit]
+Description=CPU Spoof
+
+[Mount]
+What=/opt/sysspoof/cpuinfo
+Where=/proc/cpuinfo
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat > /etc/systemd/system/proc-meminfo.mount <<EOF
+[Unit]
+Description=RAM Spoof
+
+[Mount]
+What=/opt/sysspoof/meminfo
+Where=/proc/meminfo
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable proc-cpuinfo.mount >/dev/null 2>&1
+systemctl enable proc-meminfo.mount >/dev/null 2>&1
+
+systemctl restart proc-cpuinfo.mount 2>/dev/null
+systemctl restart proc-meminfo.mount 2>/dev/null
+
+umount /proc/cpuinfo 2>/dev/null
+mount --bind /opt/sysspoof/cpuinfo /proc/cpuinfo
+
+umount /proc/meminfo 2>/dev/null
+mount --bind /opt/sysspoof/meminfo /proc/meminfo
+
+typewriter "${GREEN}[+] Spoofing lscpu...${NC}" 0.01
+
+mv /usr/bin/lscpu /usr/bin/lscpu.real 2>/dev/null
+
+cat > /usr/bin/lscpu <<EOF
+#!/bin/bash
+echo "Architecture:             x86_64"
+echo "CPU(s):                   $CORES"
+echo "Vendor ID:                AuthenticAMD"
+echo "Model name:               $CPUNAME"
+echo "Core(s) per socket:       $CORES"
+echo "Socket(s):                1"
+echo "Virtualization:           KVM"
+EOF
+
+chmod +x /usr/bin/lscpu
+
+typewriter "${GREEN}[+] Spoofing nproc...${NC}" 0.01
+
+mv /usr/bin/nproc /usr/bin/nproc.real 2>/dev/null
+
+cat > /usr/bin/nproc <<EOF
+#!/bin/bash
+echo $CORES
+EOF
+
+chmod +x /usr/bin/nproc
+
+echo ""
+typewriter "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" 0.003
+typewriter "${GREEN}      SPOOF SETUP COMPLETE${NC}" 0.03
+typewriter "${YELLOW}          Credits: PARA${NC}" 0.04
+typewriter "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}" 0.003
+
+echo -e "${GREEN}"
+echo "RAM     : ${RAMGB}GB"
+echo "CPU     : $CPUNAME"
+echo "CORES   : $CORES"
+echo "STATUS  : ACTIVE"
+echo -e "${NC}"
