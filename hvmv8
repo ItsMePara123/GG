@@ -1,0 +1,657 @@
+#!/usr/bin/env bash
+
+# =========================================================
+# HVM PANEL V8 ULTRA INSTALLER
+# Premium Terminal UI Edition
+# =========================================================
+
+set -euo pipefail
+
+# =========================================================
+# COLORS
+# =========================================================
+
+RED="\e[1;31m"
+GREEN="\e[1;32m"
+YELLOW="\e[1;33m"
+BLUE="\e[1;34m"
+CYAN="\e[1;36m"
+MAGENTA="\e[1;35m"
+WHITE="\e[1;37m"
+DIM="\e[2m"
+RESET="\e[0m"
+
+# =========================================================
+# VARIABLES
+# =========================================================
+
+HVM_URL="https://files.catbox.moe/rr0uum.bin"
+
+INSTALL_DIR="/opt/hvm"
+SERVICE_NAME="hvm"
+PANEL_PORT="5000"
+
+BIN_FILE="${INSTALL_DIR}/hvm.bin"
+LOG_FILE="/var/log/hvm.log"
+
+MIN_FILE_SIZE_MB=30
+
+# =========================================================
+# TERMINAL UI
+# =========================================================
+
+clear_screen() {
+    clear
+}
+
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.015}"
+
+    while IFS= read -r -n1 char; do
+        printf "%s" "$char"
+        sleep "$delay"
+    done <<< "$text"
+
+    echo
+}
+
+typewrite_inline() {
+    local text="$1"
+    local delay="${2:-0.015}"
+
+    while IFS= read -r -n1 char; do
+        printf "%s" "$char"
+        sleep "$delay"
+    done <<< "$text"
+}
+
+line() {
+    echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+}
+
+small_line() {
+    echo -e "${DIM}────────────────────────────────────────────────────────────${RESET}"
+}
+
+info() {
+    echo -e " ${CYAN}◆${RESET} $1"
+}
+
+ok() {
+    echo -e " ${GREEN}✔${RESET} $1"
+}
+
+warn() {
+    echo -e " ${YELLOW}⚠${RESET} $1"
+}
+
+error() {
+    echo -e " ${RED}✖${RESET} $1"
+}
+
+loading() {
+    echo -ne " ${CYAN}◆${RESET} $1 "
+    for i in {1..3}; do
+        echo -ne "${CYAN}.${RESET}"
+        sleep 0.25
+    done
+    echo
+}
+
+# =========================================================
+# BANNER
+# =========================================================
+
+show_banner() {
+
+    clear_screen
+
+    echo
+    echo -e "${CYAN}"
+    cat << "EOF"
+
+██╗  ██╗██╗   ██╗███╗   ███╗
+██║  ██║██║   ██║████╗ ████║
+███████║██║   ██║██╔████╔██║
+██╔══██║╚██╗ ██╔╝██║╚██╔╝██║
+██║  ██║ ╚████╔╝ ██║ ╚═╝ ██║
+╚═╝  ╚═╝  ╚═══╝  ╚═╝     ╚═╝
+
+EOF
+
+    echo -e "${RESET}"
+
+    echo -e "${WHITE}                 HVM PANEL V8${RESET}"
+    echo -e "${DIM}             ULTRA INSTALLER${RESET}"
+    echo
+
+    line
+
+    echo
+    typewrite_inline "${CYAN}Initializing HVM installation environment...${RESET}" 0.018
+    echo
+    sleep 0.5
+
+    echo -e "${GREEN}                 SYSTEM READY ✔${RESET}"
+    echo
+
+    line
+    echo
+}
+
+# =========================================================
+# ROOT CHECK
+# =========================================================
+
+check_root() {
+
+    if [[ "$EUID" -ne 0 ]]; then
+        error "This installer must be executed as root."
+        echo
+        echo -e "${DIM}Try:${RESET} ${WHITE}sudo bash installer.sh${RESET}"
+        exit 1
+    fi
+
+    ok "Root privileges confirmed."
+}
+
+# =========================================================
+# OS DETECTION
+# =========================================================
+
+detect_os() {
+
+    if [[ -f /etc/os-release ]]; then
+        source /etc/os-release
+        DISTRO="$ID"
+        VERSION="$VERSION_ID"
+    else
+        error "Unable to detect operating system."
+        exit 1
+    fi
+
+    ARCH=$(uname -m)
+
+    info "Operating System : ${WHITE}${PRETTY_NAME}${RESET}"
+    info "Architecture     : ${WHITE}${ARCH}${RESET}"
+
+    echo
+}
+
+# =========================================================
+# DEPENDENCIES
+# =========================================================
+
+install_dependencies() {
+
+    echo -e "${WHITE}DEPENDENCY SETUP${RESET}"
+    small_line
+    echo
+
+    loading "Preparing package manager"
+
+    if command -v apt >/dev/null 2>&1; then
+
+        export DEBIAN_FRONTEND=noninteractive
+
+        apt update -y
+
+        apt install -y \
+            curl wget lsof tar unzip sudo nano \
+            python3 python3-pip ca-certificates
+
+    elif command -v dnf >/dev/null 2>&1; then
+
+        dnf install -y \
+            curl wget lsof tar unzip sudo nano \
+            python3 python3-pip ca-certificates
+
+    elif command -v yum >/dev/null 2>&1; then
+
+        yum install -y epel-release
+
+        yum install -y \
+            curl wget lsof tar unzip sudo nano \
+            python3 python3-pip ca-certificates
+
+    elif command -v pacman >/dev/null 2>&1; then
+
+        pacman -Sy --noconfirm \
+            curl wget lsof tar unzip sudo nano \
+            python python-pip ca-certificates
+
+    elif command -v apk >/dev/null 2>&1; then
+
+        apk update
+
+        apk add \
+            curl wget lsof tar unzip sudo nano \
+            python3 py3-pip ca-certificates
+
+    elif command -v zypper >/dev/null 2>&1; then
+
+        zypper refresh
+
+        zypper install -y \
+            curl wget lsof tar unzip sudo nano \
+            python3 python3-pip ca-certificates
+
+    else
+
+        error "Unsupported Linux distribution."
+        exit 1
+
+    fi
+
+    ok "Required dependencies installed."
+    echo
+}
+
+# =========================================================
+# PORT CHECK
+# =========================================================
+
+check_port() {
+
+    echo -e "${WHITE}NETWORK CHECK${RESET}"
+    small_line
+    echo
+
+    if lsof -Pi :"${PANEL_PORT}" -sTCP:LISTEN -t >/dev/null 2>&1; then
+
+        warn "Port ${PANEL_PORT} is already in use."
+
+        echo
+        lsof -i:"${PANEL_PORT}"
+        echo
+
+        read -rp "Continue anyway? (y/n): " confirm
+
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            error "Installation cancelled."
+            exit 1
+        fi
+
+    else
+
+        ok "Port ${PANEL_PORT} is available."
+
+    fi
+
+    echo
+}
+
+# =========================================================
+# INSTALL DIRECTORY
+# =========================================================
+
+prepare_directory() {
+
+    info "Creating HVM installation directory..."
+
+    mkdir -p "${INSTALL_DIR}"
+
+    cd "${INSTALL_DIR}"
+
+    ok "Installation directory ready."
+    echo
+}
+
+# =========================================================
+# DOWNLOAD
+# =========================================================
+
+download_binary() {
+
+    echo -e "${WHITE}HVM CORE DOWNLOAD${RESET}"
+    small_line
+    echo
+
+    typewrite_inline "${CYAN}Downloading HVM core binary...${RESET}" 0.018
+    echo
+
+    rm -f hvm.bin
+
+    curl -L \
+        --fail \
+        --retry 5 \
+        --retry-delay 3 \
+        --progress-bar \
+        -o hvm.bin "${HVM_URL}"
+
+    echo
+    ok "Download completed."
+    echo
+}
+
+# =========================================================
+# VERIFY
+# =========================================================
+
+verify_binary() {
+
+    echo -e "${WHITE}CORE VERIFICATION${RESET}"
+    small_line
+    echo
+
+    if [[ ! -f hvm.bin ]]; then
+        error "Download failed."
+        exit 1
+    fi
+
+    if [[ ! -s hvm.bin ]]; then
+        error "Downloaded file is empty."
+        exit 1
+    fi
+
+    FILE_SIZE_MB=$(du -m hvm.bin | cut -f1)
+
+    info "Binary size: ${WHITE}${FILE_SIZE_MB} MB${RESET}"
+
+    if [[ "${FILE_SIZE_MB}" -lt "${MIN_FILE_SIZE_MB}" ]]; then
+        error "Invalid or corrupted HVM binary detected."
+        file hvm.bin || true
+        exit 1
+    fi
+
+    if file hvm.bin | grep -qi "html"; then
+        error "Downloaded HTML instead of binary."
+        exit 1
+    fi
+
+    chmod +x hvm.bin
+
+    ok "Binary integrity check passed."
+    ok "Executable permissions applied."
+
+    echo
+}
+
+# =========================================================
+# FIREWALL
+# =========================================================
+
+configure_firewall() {
+
+    echo -e "${WHITE}FIREWALL CONFIGURATION${RESET}"
+    small_line
+    echo
+
+    info "Opening TCP port ${PANEL_PORT}..."
+
+    if command -v ufw >/dev/null 2>&1; then
+        ufw allow "${PANEL_PORT}/tcp" >/dev/null 2>&1 || true
+    fi
+
+    if command -v firewall-cmd >/dev/null 2>&1; then
+        firewall-cmd \
+            --permanent \
+            --add-port="${PANEL_PORT}/tcp" \
+            >/dev/null 2>&1 || true
+
+        firewall-cmd \
+            --reload \
+            >/dev/null 2>&1 || true
+    fi
+
+    if command -v iptables >/dev/null 2>&1; then
+
+        iptables -C INPUT \
+            -p tcp \
+            --dport "${PANEL_PORT}" \
+            -j ACCEPT \
+            >/dev/null 2>&1 || \
+        iptables -I INPUT \
+            -p tcp \
+            --dport "${PANEL_PORT}" \
+            -j ACCEPT \
+            >/dev/null 2>&1 || true
+
+    fi
+
+    ok "Firewall configuration completed."
+    echo
+}
+
+# =========================================================
+# SYSTEMD
+# =========================================================
+
+create_service() {
+
+    echo -e "${WHITE}SERVICE CONFIGURATION${RESET}"
+    small_line
+    echo
+
+    if command -v systemctl >/dev/null 2>&1; then
+
+        info "Creating systemd service..."
+
+        cat > "/etc/systemd/system/${SERVICE_NAME}.service" << EOF
+[Unit]
+Description=HVM Panel V8
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=${INSTALL_DIR}
+ExecStart=${BIN_FILE}
+Restart=always
+RestartSec=5
+LimitNOFILE=1048576
+User=root
+StandardOutput=append:${LOG_FILE}
+StandardError=append:${LOG_FILE}
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        systemctl daemon-reload
+
+        systemctl enable \
+            "${SERVICE_NAME}" \
+            >/dev/null 2>&1
+
+        systemctl restart "${SERVICE_NAME}"
+
+        sleep 5
+
+        if systemctl is-active --quiet "${SERVICE_NAME}"; then
+
+            ok "HVM service is running."
+
+        else
+
+            error "HVM service failed to start."
+            echo
+
+            systemctl status \
+                "${SERVICE_NAME}" \
+                --no-pager
+
+            echo
+            exit 1
+
+        fi
+
+    else
+
+        warn "systemd was not detected."
+        warn "Starting HVM manually..."
+
+        nohup "${BIN_FILE}" \
+            >> "${LOG_FILE}" 2>&1 &
+
+        sleep 3
+
+        ok "HVM started in background."
+
+    fi
+
+    echo
+}
+
+# =========================================================
+# STATUS
+# =========================================================
+
+get_status() {
+
+    if lsof -Pi :"${PANEL_PORT}" -sTCP:LISTEN -t \
+        >/dev/null 2>&1; then
+
+        PANEL_STATUS="${GREEN}ONLINE${RESET}"
+
+    else
+
+        PANEL_STATUS="${RED}OFFLINE${RESET}"
+
+    fi
+}
+
+# =========================================================
+# PUBLIC IP
+# =========================================================
+
+get_public_ip() {
+
+    PUBLIC_IP=$(curl -4 -s --max-time 10 ifconfig.me || true)
+
+    if [[ -z "${PUBLIC_IP}" ]]; then
+        PUBLIC_IP=$(hostname -I | awk '{print $1}')
+    fi
+
+    if [[ -z "${PUBLIC_IP}" ]]; then
+        PUBLIC_IP="YOUR_SERVER_IP"
+    fi
+}
+
+# =========================================================
+# FINAL SCREEN
+# =========================================================
+
+finish_screen() {
+
+    clear_screen
+
+    echo
+    echo -e "${GREEN}"
+
+    cat << "EOF"
+
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║              ███████╗██╗   ██╗ ██████╗                    ║
+║              ██╔════╝██║   ██║██╔════╝                    ║
+║              █████╗  ██║   ██║██║  ███╗                   ║
+║              ██╔══╝  ╚██╗ ██╔╝██║   ██║                   ║
+║              ███████╗ ╚████╔╝ ╚██████╔╝                   ║
+║              ╚══════╝  ╚═══╝   ╚═════╝                    ║
+║                                                            ║
+║                  HVM PANEL V8                              ║
+║                  INSTALLATION COMPLETE                    ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+EOF
+
+    echo -e "${RESET}"
+
+    echo -e "${WHITE}SYSTEM STATUS${RESET}"
+    line
+    echo
+
+    printf "  %-20s : %b\n" "STATUS" "${PANEL_STATUS}"
+    printf "  %-20s : ${CYAN}http://${PUBLIC_IP}:${PANEL_PORT}${RESET}\n" "PANEL URL"
+    printf "  %-20s : ${WHITE}admin${RESET}\n" "USERNAME"
+    printf "  %-20s : ${WHITE}admin${RESET}\n" "PASSWORD"
+    printf "  %-20s : ${WHITE}${INSTALL_DIR}${RESET}\n" "INSTALL DIRECTORY"
+    printf "  %-20s : ${WHITE}${BIN_FILE}${RESET}\n" "BINARY"
+    printf "  %-20s : ${WHITE}${LOG_FILE}${RESET}\n" "LOG FILE"
+    printf "  %-20s : ${WHITE}${SERVICE_NAME}${RESET}\n" "SERVICE"
+
+    echo
+    line
+    echo
+
+    echo -e "${WHITE}SERVICE COMMANDS${RESET}"
+    small_line
+    echo
+
+    echo -e "  ${CYAN}Start${RESET}    → systemctl start ${SERVICE_NAME}"
+    echo -e "  ${CYAN}Stop${RESET}     → systemctl stop ${SERVICE_NAME}"
+    echo -e "  ${CYAN}Restart${RESET}  → systemctl restart ${SERVICE_NAME}"
+    echo -e "  ${CYAN}Status${RESET}   → systemctl status ${SERVICE_NAME}"
+
+    echo
+    line
+    echo
+
+    echo -e "${WHITE}LIVE LOGS${RESET}"
+    small_line
+    echo
+
+    echo -e "  ${CYAN}journalctl -u ${SERVICE_NAME} -f${RESET}"
+
+    echo
+    line
+    echo
+
+    echo -e "${WHITE}ONE-LINE INSTALLER${RESET}"
+    small_line
+    echo
+
+    echo -e "${CYAN}bash <(curl -fsSL https://raw.githubusercontent.com/hopingboyz/hvm-panel/main/installer.sh)${RESET}"
+
+    echo
+    line
+    echo
+
+    echo -e "${MAGENTA}CREDITS${RESET}"
+    echo
+    typewrite_inline "${WHITE}HVM Panel V8${RESET} ${DIM}— Ultra Installer${RESET}" 0.025
+    typewrite_inline "${DIM}Built for fast, clean and reliable server deployment.${RESET}" 0.015
+    typewrite_inline "${DIM}Designed & maintained by the HVM Panel team.${RESET}" 0.015
+    typewrite_inline "${DIM}Thanks for using HVM Panel. ❤️${RESET}" 0.015
+
+    echo
+    echo -e "${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "${CYAN}                 INSTALLATION FINISHED${RESET}"
+    echo -e "${DIM}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo
+}
+
+# =========================================================
+# MAIN
+# =========================================================
+
+show_banner
+
+check_root
+
+detect_os
+
+install_dependencies
+
+check_port
+
+prepare_directory
+
+download_binary
+
+verify_binary
+
+configure_firewall
+
+create_service
+
+get_status
+
+get_public_ip
+
+sleep 1
+
+finish_screen
