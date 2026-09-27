@@ -1,0 +1,587 @@
+#!/bin/bash
+
+# =========================================================
+# CUSTOM MOTD MANAGER V1
+# Universal Linux SSH MOTD Generator
+# =========================================================
+
+set -e
+
+# =========================================================
+# COLORS
+# =========================================================
+
+CYAN='\033[38;5;51m'
+GREEN='\033[38;5;82m'
+YELLOW='\033[38;5;220m'
+BLUE='\033[38;5;51m'
+PURPLE='\033[38;5;141m'
+RED='\033[38;5;196m'
+WHITE='\033[38;5;255m'
+GRAY='\033[38;5;242m'
+RESET='\033[0m'
+
+MOTD_FILE="/etc/update-motd.d/00-custom-motd"
+CONFIG_FILE="/etc/custom-motd.conf"
+
+# =========================================================
+# UI
+# =========================================================
+
+line() {
+    echo -e "${GRAY}────────────────────────────────────────────────────────────${RESET}"
+}
+
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.012}"
+
+    while IFS= read -r -n1 char; do
+        printf "%s" "$char"
+        sleep "$delay"
+    done <<< "$text"
+
+    echo
+}
+
+success() {
+    echo -e "  ${GREEN}✔${RESET} $1"
+}
+
+error() {
+    echo -e "  ${RED}✖${RESET} $1"
+}
+
+info() {
+    echo -e "  ${CYAN}◆${RESET} $1"
+}
+
+warning() {
+    echo -e "  ${YELLOW}⚠${RESET} $1"
+}
+
+section() {
+    echo
+    echo -e "${PURPLE}◆ ${WHITE}$1${RESET}"
+    line
+    echo
+}
+
+# =========================================================
+# BANNER
+# =========================================================
+
+banner() {
+
+    clear
+
+    echo -e "${CYAN}"
+
+    cat << 'EOF'
+
+   ███╗   ███╗ ██████╗ ████████╗██████╗
+   ████╗ ████║██╔═══██╗╚══██╔══╝██╔══██╗
+   ██╔████╔██║██║   ██║   ██║   ██║  ██║
+   ██║╚██╔╝██║██║   ██║   ██║   ██║  ██║
+   ██║ ╚═╝ ██║╚██████╔╝   ██║   ██████╔╝
+   ╚═╝     ╚═╝ ╚═════╝    ╚═╝   ╚═════╝
+
+EOF
+
+    echo -e "${RESET}"
+
+    echo -e "${GREEN}             C U S T O M   M O T D${RESET}"
+    echo -e "${GRAY}              M A N A G E R   V 1${RESET}"
+
+    echo
+    line
+    echo
+
+    typewrite "${CYAN}Welcome to the Custom MOTD Manager.${RESET}" 0.015
+    typewrite "${GRAY}Build a professional SSH login screen in seconds.${RESET}" 0.01
+
+    echo
+    line
+}
+
+# =========================================================
+# ROOT CHECK
+# =========================================================
+
+check_root() {
+
+    if [[ "$EUID" -ne 0 ]]; then
+        error "This manager must be run as root."
+        echo
+        echo -e "  ${GRAY}Try:${RESET} ${WHITE}sudo bash motd.sh${RESET}"
+        exit 1
+    fi
+}
+
+# =========================================================
+# EXISTING CONFIG
+# =========================================================
+
+load_config() {
+
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
+    fi
+}
+
+# =========================================================
+# ASCII INPUT
+# =========================================================
+
+get_ascii() {
+
+    section "ASCII LOGO"
+
+    echo -e "${GRAY}"
+    echo "Paste your ASCII logo below."
+    echo "You can use multiple lines."
+    echo "Type ${WHITE}END${GRAY} on a new line when finished."
+    echo -e "${RESET}"
+
+    echo
+
+    ASCII_LOGO=""
+
+    while IFS= read -r line; do
+
+        [[ "$line" == "END" ]] && break
+
+        if [[ -z "$ASCII_LOGO" ]]; then
+            ASCII_LOGO="$line"
+        else
+            ASCII_LOGO="${ASCII_LOGO}"$'\n'"${line}"
+        fi
+
+    done
+
+    if [[ -z "$ASCII_LOGO" ]]; then
+        ASCII_LOGO="CUSTOM SERVER"
+    fi
+
+    success "ASCII logo captured."
+}
+
+# =========================================================
+# TEXT INPUT
+# =========================================================
+
+ask() {
+
+    local label="$1"
+    local default="$2"
+    local variable="$3"
+
+    echo -ne "  ${PURPLE}•${RESET} ${WHITE}${label}${RESET}"
+
+    if [[ -n "$default" ]]; then
+        echo -ne " ${GRAY}[${default}]${RESET}"
+    fi
+
+    echo
+    echo -ne "    ${GRAY}╰─>${RESET} "
+
+    read -r value
+
+    if [[ -z "$value" ]]; then
+        value="$default"
+    fi
+
+    printf -v "$variable" '%s' "$value"
+}
+
+# =========================================================
+# CONFIGURATION
+# =========================================================
+
+configure() {
+
+    section "BRAND CONFIGURATION"
+
+    ask "Brand / Company Name" "${BRAND:-My Server}" BRAND
+
+    ask "Website URL" "${WEBSITE:-https://example.com}" WEBSITE
+
+    ask "Support Email" "${SUPPORT:-support@example.com}" SUPPORT
+
+    ask "Tagline" "${TAGLINE:-High Performance • Reliable • Secure}" TAGLINE
+
+    echo
+
+    echo -e "${WHITE}Choose a theme:${RESET}"
+    echo
+    echo -e "  ${CYAN}1${RESET}) Cyan"
+    echo -e "  ${GREEN}2${RESET}) Green"
+    echo -e "  ${PURPLE}3${RESET}) Purple"
+    echo -e "  ${YELLOW}4${RESET}) Gold"
+    echo -e "  ${BLUE}5${RESET}) Blue"
+
+    echo
+    echo -ne "  ${GRAY}Theme [1]:${RESET} "
+
+    read -r THEME
+
+    THEME="${THEME:-1}"
+
+    case "$THEME" in
+
+        1)
+            COLOR_NAME="CYAN"
+            ;;
+        2)
+            COLOR_NAME="GREEN"
+            ;;
+        3)
+            COLOR_NAME="PURPLE"
+            ;;
+        4)
+            COLOR_NAME="YELLOW"
+            ;;
+        5)
+            COLOR_NAME="BLUE"
+            ;;
+        *)
+            COLOR_NAME="CYAN"
+            ;;
+
+    esac
+
+    get_ascii
+
+    save_config
+}
+
+# =========================================================
+# SAVE CONFIG
+# =========================================================
+
+save_config() {
+
+    cat > "$CONFIG_FILE" << EOF
+BRAND=$(printf '%q' "$BRAND")
+WEBSITE=$(printf '%q' "$WEBSITE")
+SUPPORT=$(printf '%q' "$SUPPORT")
+TAGLINE=$(printf '%q' "$TAGLINE")
+COLOR_NAME=$(printf '%q' "$COLOR_NAME")
+ASCII_LOGO=$(printf '%q' "$ASCII_LOGO")
+EOF
+
+    chmod 600 "$CONFIG_FILE"
+
+    success "Configuration saved."
+}
+
+# =========================================================
+# GENERATED MOTD
+# =========================================================
+
+generate_motd() {
+
+    section "GENERATING MOTD"
+
+    cat > "$MOTD_FILE" << EOF
+#!/bin/bash
+
+# =========================================================
+# CUSTOM MOTD
+# Generated by Custom MOTD Manager
+# =========================================================
+
+CYAN="\e[38;5;51m"
+GREEN="\e[38;5;82m"
+YELLOW="\e[38;5;220m"
+BLUE="\e[38;5;51m"
+PURPLE="\e[38;5;141m"
+WHITE="\e[38;5;255m"
+GRAY="\e[38;5;242m"
+RESET="\e[0m"
+
+# ---------------------------------------------------------
+# Brand
+# ---------------------------------------------------------
+
+BRAND="${BRAND}"
+WEBSITE="${WEBSITE}"
+SUPPORT="${SUPPORT}"
+TAGLINE="${TAGLINE}"
+
+# ---------------------------------------------------------
+# System Information
+# ---------------------------------------------------------
+
+HOSTNAME=\$(hostname)
+
+if [[ -f /etc/os-release ]]; then
+    OS=\$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
+else
+    OS="Unknown Linux"
+fi
+
+KERNEL=\$(uname -r)
+
+UPTIME=\$(uptime -p | sed 's/up //')
+
+CPU_LOAD=\$(awk '{print \$1}' /proc/loadavg)
+
+MEM_TOTAL=\$(free -m | awk '/Mem:/ {print \$2}')
+MEM_USED=\$(free -m | awk '/Mem:/ {print \$3}')
+
+if [[ "\$MEM_TOTAL" -gt 0 ]]; then
+    MEM_PERC=\$((MEM_USED * 100 / MEM_TOTAL))
+else
+    MEM_PERC=0
+fi
+
+DISK_USED=\$(df -h / | awk 'NR==2 {print \$3}')
+DISK_TOTAL=\$(df -h / | awk 'NR==2 {print \$2}')
+DISK_PERC=\$(df / | awk 'NR==2 {print \$5}')
+
+IP=\$(hostname -I 2>/dev/null | awk '{print \$1}')
+IP=\${IP:-Unavailable}
+
+USERS=\$(who 2>/dev/null | wc -l)
+
+PROCS=\$(ps -e --no-headers 2>/dev/null | wc -l)
+
+# ---------------------------------------------------------
+# ASCII LOGO
+# ---------------------------------------------------------
+
+echo -e "\${${COLOR_NAME}}"
+
+cat << 'LOGO'
+${ASCII_LOGO}
+LOGO
+
+echo -e "\${RESET}"
+
+# ---------------------------------------------------------
+# Welcome
+# ---------------------------------------------------------
+
+echo -e "\${${COLOR_NAME}}\${BRAND}\${RESET}"
+echo -e "\${GRAY}\${TAGLINE}\${RESET}"
+echo
+
+# ---------------------------------------------------------
+# System Information
+# ---------------------------------------------------------
+
+echo -e "\${${COLOR_NAME}}📊 SYSTEM INFORMATION\${RESET}"
+
+printf "  \${YELLOW}Hostname     :\${RESET} %s\\n" "\$HOSTNAME"
+printf "  \${YELLOW}OS           :\${RESET} %s\\n" "\$OS"
+printf "  \${YELLOW}Kernel       :\${RESET} %s\\n" "\$KERNEL"
+printf "  \${YELLOW}CPU Load     :\${RESET} %s\\n" "\$CPU_LOAD"
+printf "  \${YELLOW}Memory Usage :\${RESET} %sMB / %sMB (%s%%)\\n" "\$MEM_USED" "\$MEM_TOTAL" "\$MEM_PERC"
+printf "  \${YELLOW}Disk Usage   :\${RESET} %s / %s (%s)\\n" "\$DISK_USED" "\$DISK_TOTAL" "\$DISK_PERC"
+printf "  \${YELLOW}Processes    :\${RESET} %s\\n" "\$PROCS"
+printf "  \${YELLOW}Users Online :\${RESET} %s\\n" "\$USERS"
+printf "  \${YELLOW}IP Address   :\${RESET} %s\\n" "\$IP"
+printf "  \${YELLOW}Uptime       :\${RESET} %s\\n" "\$UPTIME"
+
+echo
+
+# ---------------------------------------------------------
+# Footer
+# ---------------------------------------------------------
+
+echo -e "\${${COLOR_NAME}}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\${RESET}"
+
+printf "  \${GREEN}Support:\${RESET} %s\\n" "\$SUPPORT"
+printf "  \${GREEN}Website:\${RESET} %s\\n" "\$WEBSITE"
+
+echo -e "\${${COLOR_NAME}}\${TAGLINE}\${RESET}"
+
+echo -e "\${${COLOR_NAME}}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\${RESET}"
+echo
+EOF
+
+    chmod +x "$MOTD_FILE"
+
+    success "MOTD generated successfully."
+}
+
+# =========================================================
+# DISABLE DEFAULT MOTD
+# =========================================================
+
+disable_default_motd() {
+
+    section "MOTD CONFIGURATION"
+
+    if [[ -d /etc/update-motd.d ]]; then
+
+        for file in /etc/update-motd.d/*; do
+
+            [[ -f "$file" ]] || continue
+
+            case "$(basename "$file")" in
+
+                00-header|10-help-text|50-motd-news)
+                    chmod -x "$file" 2>/dev/null || true
+                    ;;
+
+            esac
+
+        done
+
+        success "Default MOTD messages disabled."
+
+    else
+
+        warning "/etc/update-motd.d was not found."
+        warning "Using SSH static MOTD instead."
+
+    fi
+}
+
+# =========================================================
+# INSTALL
+# =========================================================
+
+install_motd() {
+
+    generate_motd
+
+    disable_default_motd
+
+    echo
+    success "Custom MOTD installed."
+}
+
+# =========================================================
+# PREVIEW
+# =========================================================
+
+preview() {
+
+    section "MOTD PREVIEW"
+
+    if [[ ! -f "$MOTD_FILE" ]]; then
+        warning "No MOTD is currently installed."
+        return
+    fi
+
+    bash "$MOTD_FILE"
+
+    echo
+    line
+}
+
+# =========================================================
+# REMOVE
+# =========================================================
+
+remove_motd() {
+
+    section "REMOVE MOTD"
+
+    if [[ -f "$MOTD_FILE" ]]; then
+
+        rm -f "$MOTD_FILE"
+
+        success "Custom MOTD removed."
+
+    else
+
+        warning "Custom MOTD is not installed."
+
+    fi
+
+    if [[ -f "$CONFIG_FILE" ]]; then
+        rm -f "$CONFIG_FILE"
+    fi
+
+    echo
+}
+
+# =========================================================
+# MAIN MENU
+# =========================================================
+
+menu() {
+
+    while true; do
+
+        banner
+
+        echo
+        echo -e "${WHITE}MANAGER MENU${RESET}"
+        line
+        echo
+
+        echo -e "  ${CYAN}1${RESET}  Configure & Install"
+        echo -e "  ${CYAN}2${RESET}  Preview MOTD"
+        echo -e "  ${CYAN}3${RESET}  Reconfigure MOTD"
+        echo -e "  ${CYAN}4${RESET}  Remove MOTD"
+        echo -e "  ${CYAN}5${RESET}  Exit"
+
+        echo
+        echo -ne "  ${GRAY}Select option:${RESET} "
+
+        read -r choice
+
+        case "$choice" in
+
+            1)
+                configure
+                install_motd
+
+                echo
+                echo -e "  ${GREEN}✔ Installation complete.${RESET}"
+                echo -e "  ${GRAY}Reconnect to SSH to see the MOTD.${RESET}"
+                read -rp "  Press Enter to continue..."
+                ;;
+
+            2)
+                load_config
+                preview
+                read -rp "  Press Enter to continue..."
+                ;;
+
+            3)
+                load_config
+                configure
+                install_motd
+
+                echo
+                success "MOTD updated."
+
+                read -rp "  Press Enter to continue..."
+                ;;
+
+            4)
+                remove_motd
+                read -rp "  Press Enter to continue..."
+                ;;
+
+            5)
+                clear
+                echo
+                typewrite "${CYAN}Thanks for using Custom MOTD Manager.${RESET}" 0.02
+                echo
+                exit 0
+                ;;
+
+            *)
+                warning "Invalid option."
+                sleep 1
+                ;;
+
+        esac
+
+    done
+}
+
+# =========================================================
+# START
+# =========================================================
+
+check_root
+load_config
+menu
