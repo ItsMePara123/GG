@@ -1,0 +1,519 @@
+```bash
+#!/bin/bash
+
+# ============================================================
+#  PARA SSH ACCESS MANAGER
+#  Secure SSH Configuration & Access Utility
+#
+#  Credits: Para
+# ============================================================
+
+# -------------------- APPEARANCE -----------------------------
+
+RESET='\033[0m'
+BOLD='\033[1m'
+DIM='\033[2m'
+
+RED='\033[1;31m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+WHITE='\033[1;37m'
+
+SSH_CONFIG="/etc/ssh/sshd_config"
+SSH_BACKUP="/etc/ssh/sshd_config.para-backup"
+
+# -------------------- BASIC UI -------------------------------
+
+separator() {
+    echo -e "${DIM}────────────────────────────────────────────────────────────${RESET}"
+}
+
+info() {
+    echo -e "  ${CYAN}→${RESET} $1"
+}
+
+success() {
+    echo -e "  ${GREEN}✓${RESET} $1"
+}
+
+warning() {
+    echo -e "  ${YELLOW}⚠${RESET} $1"
+}
+
+failure() {
+    echo -e "  ${RED}✗${RESET} $1"
+}
+
+wait_key() {
+    echo ""
+    read -rp "  Press Enter to return..."
+}
+
+# -------------------- SSH INFORMATION ------------------------
+
+read_setting() {
+    local key="$1"
+    local fallback="$2"
+
+    local result
+    result=$(
+        awk -v wanted="$key" '
+            $1 == wanted && $1 !~ /^#/ {
+                value=$2
+            }
+            END {
+                if (value != "") print value
+            }
+        ' "$SSH_CONFIG" 2>/dev/null
+    )
+
+    [[ -z "$result" ]] && result="$fallback"
+
+    echo "$result"
+}
+
+ssh_port() {
+    local port
+    port=$(read_setting "Port" "22")
+
+    if [[ "$port" == "22" ]]; then
+        echo "22 (default)"
+    else
+        echo "$port"
+    fi
+}
+
+service_state() {
+    if systemctl is-active --quiet ssh 2>/dev/null ||
+       systemctl is-active --quiet sshd 2>/dev/null; then
+        echo "ONLINE"
+    else
+        echo "OFFLINE"
+    fi
+}
+
+ssh_service_name() {
+    if systemctl list-unit-files 2>/dev/null | grep -q '^ssh\.service'; then
+        echo "ssh"
+    elif systemctl list-unit-files 2>/dev/null | grep -q '^sshd\.service'; then
+        echo "sshd"
+    else
+        echo "ssh"
+    fi
+}
+
+active_connections() {
+    who 2>/dev/null | awk '$2 ~ /^pts\// {count++} END {print count+0}'
+}
+
+# -------------------- HEADER ---------------------------------
+
+render_dashboard() {
+    clear
+
+    local machine
+    local address
+    local state
+    local port
+    local sessions
+    local root_setting
+    local password_setting
+
+    machine="$(hostname 2>/dev/null || echo unknown)"
+    address="$(hostname -I 2>/dev/null | awk '{print $1}')"
+    [[ -z "$address" ]] && address="unknown"
+
+    state="$(service_state)"
+    port="$(ssh_port)"
+    sessions="$(active_connections)"
+
+    root_setting="$(read_setting "PermitRootLogin" "prohibit-password")"
+    password_setting="$(read_setting "PasswordAuthentication" "yes")"
+
+    echo ""
+    echo -e "        ${MAGENTA}${BOLD}┌──────────────────────────────────────┐${RESET}"
+    echo -e "        ${MAGENTA}${BOLD}│${RESET}       ${WHITE}${BOLD}PARA SSH ACCESS MANAGER${RESET}       ${MAGENTA}${BOLD}│${RESET}"
+    echo -e "        ${MAGENTA}${BOLD}│${RESET}       ${DIM}Server Security Console${RESET}       ${MAGENTA}${BOLD}│${RESET}"
+    echo -e "        ${MAGENTA}${BOLD}└──────────────────────────────────────┘${RESET}"
+    echo ""
+
+    echo -e "  ${CYAN}${BOLD}SERVER OVERVIEW${RESET}"
+    separator
+
+    printf '  %-19s %b\n' "Hostname" "${WHITE}${machine}${RESET}"
+    printf '  %-19s %b\n' "Address" "${WHITE}${address}${RESET}"
+
+    if [[ "$state" == "ONLINE" ]]; then
+        printf '  %-19s %b\n' "SSH daemon" "${GREEN}${BOLD}ONLINE${RESET}"
+    else
+        printf '  %-19s %b\n' "SSH daemon" "${RED}${BOLD}OFFLINE${RESET}"
+    fi
+
+    printf '  %-19s %b\n' "Listening port" "${WHITE}${port}${RESET}"
+    printf '  %-19s %b\n' "Active sessions" "${YELLOW}${sessions}${RESET}"
+
+    echo ""
+    echo -e "  ${CYAN}${BOLD}ACCESS POLICY${RESET}"
+    separator
+
+    printf '  %-19s %b\n' "Root login" "${WHITE}${root_setting}${RESET}"
+    printf '  %-19s %b\n' "Password login" "${WHITE}${password_setting}${RESET}"
+
+    echo ""
+    echo -e "  ${DIM}Configuration: ${SSH_CONFIG}${RESET}"
+    echo ""
+}
+
+# -------------------- CONFIGURATION HELPERS ------------------
+
+backup_config() {
+    if [[ ! -f "$SSH_BACKUP" ]]; then
+        cp "$SSH_CONFIG" "$SSH_BACKUP"
+        success "Original SSH configuration backed up."
+    else
+        info "Existing Para backup preserved."
+    fi
+}
+
+remove_directive() {
+    local directive="$1"
+
+    sed -i \
+        -E "/^[[:space:]]*${directive}[[:space:]]+/d" \
+        "$SSH_CONFIG"
+}
+
+write_directive() {
+    local directive="$1"
+    local value="$2"
+
+    echo "${directive} ${value}" >> "$SSH_CONFIG"
+}
+
+restart_ssh() {
+    local daemon
+    daemon="$(ssh_service_name)"
+
+    systemctl restart "$daemon"
+}
+
+# -------------------- ACCESS PROFILES ------------------------
+
+open_access() {
+
+    render_dashboard
+
+    echo -e "  ${WHITE}${BOLD}ACCESS PROFILE: OPEN${RESET}"
+    separator
+
+    echo -e "  This profile enables:"
+    echo -e "    ${GREEN}•${RESET} Root SSH login"
+    echo -e "    ${GREEN}•${RESET} Password authentication"
+    echo ""
+
+    warning "Make sure the root account has a strong password."
+    echo ""
+
+    read -rp "  Apply this configuration? [y/N] " answer
+
+    if [[ ! "$answer" =~ ^[Yy]$ ]]; then
+        info "No changes were made."
+        wait_key
+        return
+    fi
+
+    echo ""
+
+    backup_config
+
+    remove_directive "PermitRootLogin"
+    remove_directive "PasswordAuthentication"
+
+    write_directive "PermitRootLogin" "yes"
+    write_directive "PasswordAuthentication" "yes"
+
+    success "SSH access policy updated."
+
+    info "Restarting SSH daemon..."
+
+    if restart_ssh; then
+        success "SSH daemon restarted successfully."
+    else
+        failure "SSH daemon restart failed."
+        warning "Run: journalctl -u ssh -n 50 --no-pager"
+    fi
+
+    wait_key
+}
+
+lock_access() {
+
+    render_dashboard
+
+    echo -e "  ${RED}${BOLD}ACCESS PROFILE: LOCKDOWN${RESET}"
+    separator
+
+    echo -e "  This profile changes SSH to:"
+    echo -e "    ${RED}•${RESET} Root login disabled"
+    echo -e "    ${RED}•${RESET} Password authentication disabled"
+    echo -e "    ${GREEN}•${RESET} Key-based authentication expected"
+    echo ""
+
+    warning "Ensure you already have a working SSH key session."
+    warning "Do not close your existing connection until access is verified."
+    echo ""
+
+    read -rp "  Type LOCK to continue: " confirmation
+
+    if [[ "$confirmation" != "LOCK" ]]; then
+        info "Lockdown cancelled."
+        wait_key
+        return
+    fi
+
+    echo ""
+
+    backup_config
+
+    remove_directive "PermitRootLogin"
+    remove_directive "PasswordAuthentication"
+
+    write_directive "PermitRootLogin" "no"
+    write_directive "PasswordAuthentication" "no"
+
+    if restart_ssh; then
+        success "SSH lockdown policy applied."
+        success "Root login disabled."
+        success "Password authentication disabled."
+    else
+        failure "SSH daemon failed to restart."
+        warning "The configuration may require correction."
+    fi
+
+    wait_key
+}
+
+# -------------------- PASSWORD MANAGEMENT -------------------
+
+change_root_password() {
+
+    render_dashboard
+
+    echo -e "  ${WHITE}${BOLD}ROOT PASSWORD MANAGEMENT${RESET}"
+    separator
+
+    echo -e "  ${GREEN}[1]${RESET} Set password directly"
+    echo -e "  ${BLUE}[2]${RESET} Launch standard passwd utility"
+    echo -e "  ${DIM}[0]${RESET} Cancel"
+    echo ""
+
+    read -rp "  Select method: " method
+
+    case "$method" in
+
+        1)
+            echo ""
+
+            read -rsp "  New root password: " first
+            echo ""
+
+            read -rsp "  Confirm password: " second
+            echo ""
+
+            if [[ -z "$first" ]]; then
+                failure "Password cannot be empty."
+            elif [[ "$first" != "$second" ]]; then
+                failure "Passwords do not match."
+            else
+                if printf 'root:%s\n' "$first" | chpasswd; then
+                    success "Root password changed."
+                else
+                    failure "Password update failed."
+                fi
+            fi
+            ;;
+
+        2)
+            echo ""
+            passwd root
+            ;;
+
+        0)
+            info "Operation cancelled."
+            ;;
+
+        *)
+            failure "Unknown selection."
+            ;;
+    esac
+
+    wait_key
+}
+
+# -------------------- BACKUP RESTORE -------------------------
+
+restore_configuration() {
+
+    render_dashboard
+
+    echo -e "  ${YELLOW}${BOLD}RESTORE SSH CONFIGURATION${RESET}"
+    separator
+
+    if [[ ! -f "$SSH_BACKUP" ]]; then
+        failure "No Para SSH backup exists."
+        wait_key
+        return
+    fi
+
+    echo -e "  Backup file:"
+    echo -e "  ${DIM}${SSH_BACKUP}${RESET}"
+    echo ""
+
+    warning "This will replace the current sshd configuration."
+    echo ""
+
+    read -rp "  Restore backup? [y/N] " answer
+
+    if [[ ! "$answer" =~ ^[Yy]$ ]]; then
+        info "Restore cancelled."
+        wait_key
+        return
+    fi
+
+    if cp "$SSH_BACKUP" "$SSH_CONFIG"; then
+
+        if restart_ssh; then
+            success "Previous SSH configuration restored."
+            success "SSH daemon restarted."
+        else
+            failure "Configuration restored, but SSH restart failed."
+        fi
+
+    else
+        failure "Unable to restore configuration."
+    fi
+
+    wait_key
+}
+
+# -------------------- CONFIG TEST ----------------------------
+
+test_configuration() {
+
+    render_dashboard
+
+    echo -e "  ${WHITE}${BOLD}SSH CONFIGURATION CHECK${RESET}"
+    separator
+
+    local daemon
+    daemon="$(ssh_service_name)"
+
+    if command -v sshd >/dev/null 2>&1; then
+
+        info "Validating sshd configuration..."
+
+        if sshd -t 2>/tmp/para_sshd_error; then
+            success "SSH configuration syntax is valid."
+        else
+            failure "SSH configuration contains an error."
+            echo ""
+            cat /tmp/para_sshd_error
+            rm -f /tmp/para_sshd_error
+        fi
+
+    else
+        failure "sshd binary was not found."
+    fi
+
+    echo ""
+    info "Detected service: $daemon"
+
+    wait_key
+}
+
+# -------------------- ROOT CHECK -----------------------------
+
+if [[ "$EUID" -ne 0 ]]; then
+    echo ""
+    echo -e "${RED}${BOLD}ERROR:${RESET} This utility must be executed as root."
+    echo ""
+    exit 1
+fi
+
+if [[ ! -f "$SSH_CONFIG" ]]; then
+    echo ""
+    failure "SSH configuration file not found:"
+    echo "  $SSH_CONFIG"
+    echo ""
+    exit 1
+fi
+
+# -------------------- MAIN CONSOLE ---------------------------
+
+while true; do
+
+    render_dashboard
+
+    echo -e "  ${WHITE}${BOLD}ACCESS PROFILES${RESET}"
+    echo ""
+    echo -e "  ${GREEN}01${RESET}  Enable Root + Password Access"
+    echo -e "  ${RED}02${RESET}  Apply SSH Lockdown"
+    echo ""
+
+    echo -e "  ${WHITE}${BOLD}ADMINISTRATION${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}03${RESET}  Change Root Password"
+    echo -e "  ${BLUE}04${RESET}  Restore Previous Configuration"
+    echo -e "  ${CYAN}05${RESET}  Validate SSH Configuration"
+    echo ""
+
+    echo -e "  ${DIM}00${RESET}  Exit"
+    echo ""
+
+    separator
+
+    echo -ne "  ${MAGENTA}${BOLD}para@ssh${RESET} ${DIM}➜${RESET} "
+    read -r command
+
+    case "$command" in
+
+        1|01)
+            open_access
+            ;;
+
+        2|02)
+            lock_access
+            ;;
+
+        3|03)
+            change_root_password
+            ;;
+
+        4|04)
+            restore_configuration
+            ;;
+
+        5|05)
+            test_configuration
+            ;;
+
+        0|00)
+            clear
+            echo ""
+            echo -e "  ${MAGENTA}${BOLD}Para SSH Access Manager${RESET}"
+            echo -e "  ${DIM}Credits: Para${RESET}"
+            echo ""
+            exit 0
+            ;;
+
+        *)
+            failure "Invalid command."
+            sleep 1
+            ;;
+    esac
+
+done
+```
