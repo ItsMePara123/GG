@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-URL="https://hub.para77710.workers.dev"
-HOST="hub.para77710.workers.dev"
+URL="https://hub.paraxdev.indevs.in"
+HOST="hub.paraxdev.indevs.in"
 NETRC="${HOME}/.netrc"
 
 command -v curl >/dev/null 2>&1 || {
