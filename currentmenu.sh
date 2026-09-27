@@ -1,557 +1,1259 @@
+```bash
 #!/usr/bin/env bash
-# ==============================================================
-# PARA CONTROL CENTER
-# Infrastructure & Panel Management Suite
-# Full Multi-Level Menu Edition
+
+# =============================================================================
+#                         PARA // INFRASTRUCTURE
+#                   FULL COMBINED MANAGEMENT CONSOLE
 #
 # Credits: Para
-# ==============================================================
+# Version: 4.0
+#
+# Contains:
+#   - Original Para Panel Registry
+#   - Original Para Server Tools
+#   - Pterodactyl tools
+#   - VPS tools
+#   - Cloudflare tools
+#   - Backup / Nginx / Theme / Playit
+#   - System Information
+# =============================================================================
 
-set -u
+# -----------------------------------------------------------------------------
+# COLORS
+# -----------------------------------------------------------------------------
 
-# ──────────────────────────────────────────────────────────────
-# COLOR SYSTEM
-# ──────────────────────────────────────────────────────────────
+ESC=$'\033'
 
-RESET='\033[0m'
-BOLD='\033[1m'
+RESET="${ESC}[0m"
+BOLD="${ESC}[1m"
+DIM="${ESC}[2m"
 
-WHITE='\033[38;5;255m'
-GRAY='\033[38;5;245m'
-DARK='\033[38;5;240m'
+BLACK="${ESC}[30m"
+RED="${ESC}[31m"
+GREEN="${ESC}[32m"
+YELLOW="${ESC}[33m"
+BLUE="${ESC}[34m"
+MAGENTA="${ESC}[35m"
+CYAN="${ESC}[36m"
+WHITE="${ESC}[37m"
 
-RED='\033[38;5;196m'
-ORANGE='\033[38;5;208m'
-YELLOW='\033[38;5;220m'
-GREEN='\033[38;5;82m'
-LIME='\033[38;5;118m'
+GRAY="${ESC}[90m"
 
-CYAN='\033[38;5;51m'
-BLUE='\033[38;5;39m'
-PURPLE='\033[38;5;141m'
-MAGENTA='\033[38;5;201m'
-VIOLET='\033[38;5;135m'
+BRIGHT_RED="${ESC}[91m"
+BRIGHT_GREEN="${ESC}[92m"
+BRIGHT_YELLOW="${ESC}[93m"
+BRIGHT_BLUE="${ESC}[94m"
+BRIGHT_MAGENTA="${ESC}[95m"
+BRIGHT_CYAN="${ESC}[96m"
+BRIGHT_WHITE="${ESC}[97m"
 
-# ──────────────────────────────────────────────────────────────
-# PANEL MODULES
-# ──────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# CONFIG
+# -----------------------------------------------------------------------------
 
-declare -A PANEL_URLS=(
+VERSION="4.0"
+AUTHOR="Para"
 
-    [1]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/PterodactylHub"
+# -----------------------------------------------------------------------------
+# MODULE REGISTRY
+#
+# Every module has:
+#   NAME
+#   URL
+#   CATEGORY
+#   DESCRIPTION
+# -----------------------------------------------------------------------------
 
-    [2]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Reviactyl_Installer.sh"
+declare -A MODULE_NAME
+declare -A MODULE_URL
+declare -A MODULE_CATEGORY
+declare -A MODULE_DESCRIPTION
 
-    [3]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Jexcatylnstall"
+# =============================================================================
+# ORIGINAL PANEL REGISTRY
+# =============================================================================
 
-    [4]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/MythicalDash"
+MODULE_NAME[1]="Pterodactyl Hub"
+MODULE_URL[1]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/PterodactylHub"
+MODULE_CATEGORY[1]="PANELS"
+MODULE_DESCRIPTION[1]="Pterodactyl management hub"
 
-    [5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CockpitInstall"
+MODULE_NAME[2]="Reviactyl Panel"
+MODULE_URL[2]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Reviactyl_Installer.sh"
+MODULE_CATEGORY[2]="PANELS"
+MODULE_DESCRIPTION[2]="Reviactyl panel installer"
 
-    [6]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/whmcs"
+MODULE_NAME[3]="Jexcatyl Panel"
+MODULE_URL[3]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Jexcatylnstall"
+MODULE_CATEGORY[3]="PANELS"
+MODULE_DESCRIPTION[3]="Jexcatyl panel installer"
 
-    [7]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/convoy"
+MODULE_NAME[4]="Mythical Dash"
+MODULE_URL[4]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/MythicalDash"
+MODULE_CATEGORY[4]="PANELS"
+MODULE_DESCRIPTION[4]="MythicalDash client area installer"
 
-    [8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/xrdp"
+MODULE_NAME[5]="Cockpit"
+MODULE_URL[5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CockpitInstall"
+MODULE_CATEGORY[5]="PANELS"
+MODULE_DESCRIPTION[5]="Cockpit server administration"
 
-    [9]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/paymenter"
+MODULE_NAME[6]="WHMCS"
+MODULE_URL[6]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/whmcs"
+MODULE_CATEGORY[6]="PANELS"
+MODULE_DESCRIPTION[6]="WHMCS hosting management"
 
-    [10]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/hvmv8"
-)
+MODULE_NAME[7]="Convoy"
+MODULE_URL[7]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/convoy"
+MODULE_CATEGORY[7]="PANELS"
+MODULE_DESCRIPTION[7]="Convoy deployment module"
 
-declare -A PANEL_NAMES=(
+MODULE_NAME[8]="XRDP"
+MODULE_URL[8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/xrdp"
+MODULE_CATEGORY[8]="PANELS"
+MODULE_DESCRIPTION[8]="Remote desktop installer"
 
-    [1]="Pterodactyl Hub"
-    [2]="Reviactyl Panel"
-    [3]="Jexcatyl Panel"
-    [4]="Mythical Dash"
-    [5]="Cockpit"
-    [6]="WHMCS"
-    [7]="Convoy"
-    [8]="XRDP"
-    [9]="Paymenter"
-    [10]="HVM V8"
-)
+MODULE_NAME[9]="Paymenter"
+MODULE_URL[9]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/paymenter"
+MODULE_CATEGORY[9]="PANELS"
+MODULE_DESCRIPTION[9]="Paymenter billing deployment"
 
-# ──────────────────────────────────────────────────────────────
-# SYSTEM TOOL MODULES
-# ──────────────────────────────────────────────────────────────
+MODULE_NAME[10]="HVM V8"
+MODULE_URL[10]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/hvmv8"
+MODULE_CATEGORY[10]="PANELS"
+MODULE_DESCRIPTION[10]="HVM V8 deployment module"
 
-declare -A TOOL_URLS=(
+# =============================================================================
+# ORIGINAL SERVER TOOLS
+# =============================================================================
 
-    [1]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/sshfix"
+MODULE_NAME[11]="Auto Root"
+MODULE_URL[11]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/sshfix"
+MODULE_CATEGORY[11]="SERVER TOOLS"
+MODULE_DESCRIPTION[11]="SSH and root configuration"
 
-    [2]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CloudflareMenu"
+MODULE_NAME[12]="Cloudflare Installer"
+MODULE_URL[12]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CloudflareMenu"
+MODULE_CATEGORY[12]="SERVER TOOLS"
+MODULE_DESCRIPTION[12]="Cloudflare management utility"
 
-    [3]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/dockercontainer"
+MODULE_NAME[13]="Docker VM"
+MODULE_URL[13]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/dockercontainer"
+MODULE_CATEGORY[13]="SERVER TOOLS"
+MODULE_DESCRIPTION[13]="Docker container management"
 
-    [4]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SSL%20GENRATOR"
+MODULE_NAME[14]="Local SSL Generator"
+MODULE_URL[14]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SSL%20GENRATOR"
+MODULE_CATEGORY[14]="SERVER TOOLS"
+MODULE_DESCRIPTION[14]="Local SSL certificate generator"
 
-    [5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SwapRam"
+MODULE_NAME[15]="Swap RAM"
+MODULE_URL[15]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SwapRam"
+MODULE_CATEGORY[15]="SERVER TOOLS"
+MODULE_DESCRIPTION[15]="Swap memory management"
 
-    [6]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/NginxReload"
+MODULE_NAME[16]="Nginx Reload"
+MODULE_URL[16]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/NginxReload"
+MODULE_CATEGORY[16]="SERVER TOOLS"
+MODULE_DESCRIPTION[16]="Reload Nginx service"
 
-    [7]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/BlueprintFix"
+MODULE_NAME[17]="Blueprint Installer"
+MODULE_URL[17]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/BlueprintFix"
+MODULE_CATEGORY[17]="SERVER TOOLS"
+MODULE_DESCRIPTION[17]="Blueprint installation utility"
 
-    [8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
+MODULE_NAME[18]="VPS Menu"
+MODULE_URL[18]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
+MODULE_CATEGORY[18]="SERVER TOOLS"
+MODULE_DESCRIPTION[18]="VPS management toolkit"
 
-    [9]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customotdbuilder"
-)
+MODULE_NAME[19]="Custom MOTD Builder"
+MODULE_URL[19]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customotdbuilder"
+MODULE_CATEGORY[19]="SERVER TOOLS"
+MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 
-declare -A TOOL_NAMES=(
+# =============================================================================
+# NEW / NOBITA MENU MODULES
+# =============================================================================
 
-    [1]="Auto Root"
-    [2]="Cloudflare Installer"
-    [3]="Docker VM"
-    [4]="Local SSL Generator"
-    [5]="Swap RAM"
-    [6]="Nginx Reload"
-    [7]="Blueprint Installer"
-    [8]="VPS Menu"
-    [9]="Custom MOTD Builder"
-)
+MODULE_NAME[20]="Pterodactyl Panel Installer"
+MODULE_URL[20]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/pteroinstall"
+MODULE_CATEGORY[20]="PTERODACTYL"
+MODULE_DESCRIPTION[20]="Install Pterodactyl Panel"
 
-# ──────────────────────────────────────────────────────────────
-# SYSTEM TELEMETRY
-# ──────────────────────────────────────────────────────────────
+MODULE_NAME[21]="Pterodactyl Wings"
+MODULE_URL[21]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/wingsptero"
+MODULE_CATEGORY[21]="PTERODACTYL"
+MODULE_DESCRIPTION[21]="Install Pterodactyl Wings"
 
-get_system_info() {
+MODULE_NAME[22]="Pterodactyl Update"
+MODULE_URL[22]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/updateptero"
+MODULE_CATEGORY[22]="PTERODACTYL"
+MODULE_DESCRIPTION[22]="Update Pterodactyl"
 
-    HOSTNAME_NOW="$(hostname 2>/dev/null || echo "Unknown")"
+MODULE_NAME[23]="Pterodactyl Uninstall"
+MODULE_URL[23]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/uninstallptero"
+MODULE_CATEGORY[23]="PTERODACTYL"
+MODULE_DESCRIPTION[23]="Uninstall Pterodactyl"
 
-    CPU_NOW="$(
+MODULE_NAME[24]="Blueprint ParaCom"
+MODULE_URL[24]="https://raw.githubusercontent.com/ParaNoob123/Blueprint/refs/heads/main/paracom"
+MODULE_CATEGORY[24]="PTERODACTYL"
+MODULE_DESCRIPTION[24]="ParaNoob Blueprint installer"
+
+MODULE_NAME[25]="Cloudflare Legacy Installer"
+MODULE_URL[25]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/cloudflareinstall"
+MODULE_CATEGORY[25]="NETWORKING"
+MODULE_DESCRIPTION[25]="Legacy Cloudflare installer"
+
+MODULE_NAME[26]="Theme Installer"
+MODULE_URL[26]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/thememenu"
+MODULE_CATEGORY[26]="PTERODACTYL"
+MODULE_DESCRIPTION[26]="Pterodactyl theme manager"
+
+MODULE_NAME[27]="Playit Setup"
+MODULE_URL[27]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/playit"
+MODULE_CATEGORY[27]="NETWORKING"
+MODULE_DESCRIPTION[27]="Playit networking setup"
+
+MODULE_NAME[28]="Pterodactyl Bot"
+MODULE_URL[28]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/PteroBot"
+MODULE_CATEGORY[28]="PTERODACTYL"
+MODULE_DESCRIPTION[28]="Pterodactyl bot manager"
+
+MODULE_NAME[29]="Backup Manager"
+MODULE_URL[29]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/BackUp"
+MODULE_CATEGORY[29]="SERVER"
+MODULE_DESCRIPTION[29]="Server backup manager"
+
+MODULE_NAME[30]="Nginx Reload Legacy"
+MODULE_URL[30]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/NginxReload"
+MODULE_CATEGORY[30]="SERVER"
+MODULE_DESCRIPTION[30]="Legacy Nginx reload module"
+
+MODULE_NAME[31]="Pterodactyl Restart"
+MODULE_URL[31]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/RestartPtero"
+MODULE_CATEGORY[31]="PTERODACTYL"
+MODULE_DESCRIPTION[31]="Restart Pterodactyl services"
+
+MODULE_NAME[32]="VPS Maker"
+MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMaker"
+MODULE_CATEGORY[32]="VPS"
+MODULE_DESCRIPTION[32]="VPS creation utility"
+
+MODULE_NAME[33]="GitHub VPS Maker"
+MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
+MODULE_CATEGORY[33]="VPS"
+MODULE_DESCRIPTION[33]="GitHub VPS management utility"
+
+MODULE_COUNT=33
+
+# -----------------------------------------------------------------------------
+# TERMINAL
+# -----------------------------------------------------------------------------
+
+hide_cursor() {
+    printf '\033[?25l'
+}
+
+show_cursor() {
+    printf '\033[?25h'
+}
+
+clear_screen() {
+    printf '\033[2J\033[H'
+}
+
+cleanup() {
+    show_cursor
+    printf '%s' "$RESET"
+}
+
+trap cleanup EXIT
+trap 'show_cursor; exit 130' INT TERM
+
+# -----------------------------------------------------------------------------
+# TYPEWRITER
+# -----------------------------------------------------------------------------
+
+typewrite() {
+
+    local text="$1"
+    local speed="${2:-0.025}"
+
+    local i
+    local char
+
+    for ((i=0; i<${#text}; i++)); do
+
+        char="${text:i:1}"
+
+        printf '%s' "$char"
+
+        sleep "$speed"
+
+    done
+}
+
+# -----------------------------------------------------------------------------
+# SPINNER
+# -----------------------------------------------------------------------------
+
+spinner() {
+
+    local message="$1"
+    local loops="${2:-12}"
+
+    local frames=(
+        "·"
+        "•"
+        "●"
+        "•"
+    )
+
+    local i
+
+    for ((i=0; i<loops; i++)); do
+
+        printf '\r  %b%s%b %b%s%b' \
+            "$BRIGHT_CYAN" \
+            "${frames[$((i % 4))]}" \
+            "$RESET" \
+            "$WHITE" \
+            "$message" \
+            "$RESET"
+
+        sleep 0.08
+    done
+
+    printf '\r\033[K'
+}
+
+# -----------------------------------------------------------------------------
+# PROGRESS
+# -----------------------------------------------------------------------------
+
+progress() {
+
+    local label="$1"
+    local total="${2:-24}"
+
+    local i
+    local filled
+    local empty
+
+    for ((i=0; i<=total; i++)); do
+
+        filled="$i"
+        empty=$((total-i))
+
+        printf '\r  %b%-22s%b [' \
+            "$BRIGHT_CYAN" \
+            "$label" \
+            "$RESET"
+
+        printf '%*s' "$filled" '' | tr ' ' '#'
+        printf '%*s' "$empty" '' | tr ' ' '.'
+
+        printf '] %3d%%' "$((i*100/total))"
+
+        sleep 0.025
+
+    done
+
+    printf '\n'
+}
+
+# -----------------------------------------------------------------------------
+# SYSTEM
+# -----------------------------------------------------------------------------
+
+get_cpu() {
+
+    local cpu
+
+    cpu="$(
         top -bn1 2>/dev/null |
         awk '/Cpu\(s\)/ {
             gsub(",", ".", $2)
             gsub(",", ".", $4)
-            printf "%.0f", $2 + $4
+            printf "%.0f", $2+$4
             exit
         }'
     )"
 
-    [[ -z "$CPU_NOW" ]] && CPU_NOW="--"
+    printf '%s' "${cpu:-0}"
+}
 
-    RAM_NOW="$(
+get_ram() {
+
+    local ram
+
+    ram="$(
         free 2>/dev/null |
         awk '/^Mem:/ {
             if ($2 > 0)
-                printf "%.0f", ($3 / $2) * 100
+                printf "%.0f", ($3/$2)*100
             else
-                print "--"
+                print "0"
         }'
     )"
 
-    [[ -z "$RAM_NOW" ]] && RAM_NOW="--"
-
-    DISK_NOW="$(
-        df -h / 2>/dev/null |
-        awk 'NR==2 {print $5}'
-    )"
-
-    [[ -z "$DISK_NOW" ]] && DISK_NOW="--"
-
-    UPTIME_NOW="$(
-        uptime -p 2>/dev/null |
-        sed 's/^up //'
-    )"
-
-    [[ -z "$UPTIME_NOW" ]] && UPTIME_NOW="Unknown"
+    printf '%s' "${ram:-0}"
 }
 
-# ──────────────────────────────────────────────────────────────
-# VISUAL HELPERS
-# ──────────────────────────────────────────────────────────────
+get_disk() {
 
-line() {
-    printf '%b\n' "${DARK}──────────────────────────────────────────────────────────────────────────────${RESET}"
+    local disk
+
+    disk="$(df -h / 2>/dev/null | awk 'NR==2 {print $5}')"
+
+    printf '%s' "${disk:-0%}"
 }
 
-heavy_line() {
-    printf '%b\n' "${PURPLE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+get_uptime() {
+
+    uptime -p 2>/dev/null |
+        sed 's/^up //' ||
+        printf 'unknown'
 }
 
-pause_menu() {
-    echo
-    printf '%b' "${GRAY}Press ENTER to continue...${RESET}"
+get_hostname() {
+
+    hostname 2>/dev/null ||
+        printf 'unknown'
+}
+
+get_os() {
+
+    if [ -f /etc/os-release ]; then
+
+        . /etc/os-release
+
+        printf '%s' "${PRETTY_NAME:-Linux}"
+
+    else
+
+        printf 'Linux'
+
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# STATUS
+# -----------------------------------------------------------------------------
+
+status_line() {
+
+    local cpu
+    local ram
+    local disk
+
+    cpu="$(get_cpu)"
+    ram="$(get_ram)"
+    disk="$(get_disk)"
+
+    printf '  '
+
+    printf '%bCPU%b %b%s%%%b' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_CYAN" \
+        "$cpu" \
+        "$RESET"
+
+    printf '    '
+
+    printf '%bRAM%b %b%s%%%b' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_MAGENTA" \
+        "$ram" \
+        "$RESET"
+
+    printf '    '
+
+    printf '%bDISK%b %b%s%b' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_YELLOW" \
+        "$disk" \
+        "$RESET"
+
+    printf '    '
+
+    printf '%b● ONLINE%b' \
+        "$BRIGHT_GREEN" \
+        "$RESET"
+
+    printf '\n'
+}
+
+# -----------------------------------------------------------------------------
+# HEADER
+# -----------------------------------------------------------------------------
+
+draw_header() {
+
+    clear_screen
+
+    printf '\n'
+
+    printf '  %b' "$BRIGHT_CYAN$BOLD"
+    typewrite "PARA" 0.045
+    printf '%b' "$RESET"
+
+    printf ' %b//%b ' "$GRAY" "$RESET"
+
+    printf '%b' "$BRIGHT_WHITE$BOLD"
+    typewrite "INFRASTRUCTURE" 0.018
+    printf '%b\n' "$RESET"
+
+    printf '  %bserver operations / deployment / automation%b\n' \
+        "$GRAY" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$BRIGHT_BLUE" \
+        "$RESET"
+
+    printf '  %bHOST%b  %b%s%b' \
+        "$GRAY" \
+        "$RESET" \
+        "$WHITE" \
+        "$(get_hostname)" \
+        "$RESET"
+
+    printf '    '
+
+    printf '%bOS%b  %b%s%b' \
+        "$GRAY" \
+        "$RESET" \
+        "$WHITE" \
+        "$(get_os)" \
+        "$RESET"
+
+    printf '    '
+
+    printf '%bVER%b  %b%s%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_CYAN" \
+        "$VERSION" \
+        "$RESET"
+
+    status_line
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$BRIGHT_BLUE" \
+        "$RESET"
+}
+
+# -----------------------------------------------------------------------------
+# BOOT
+# -----------------------------------------------------------------------------
+
+boot_screen() {
+
+    clear_screen
+
+    printf '\n\n'
+
+    printf '       %b' "$BRIGHT_CYAN$BOLD"
+    typewrite "P A R A" 0.09
+    printf '%b\n' "$RESET"
+
+    printf '\n'
+
+    printf '       %b' "$BRIGHT_WHITE$BOLD"
+    typewrite "INFRASTRUCTURE CONSOLE" 0.035
+    printf '%b\n' "$RESET"
+
+    printf '\n'
+
+    printf '       %b' "$GRAY"
+    typewrite "33 modules / remote deployment / server operations" 0.012
+    printf '%b\n\n' "$RESET"
+
+    progress "loading core" 25
+    progress "loading registry" 25
+    progress "checking environment" 25
+
+    printf '\n'
+
+    printf '       %b● SYSTEM READY%b\n' \
+        "$BRIGHT_GREEN$BOLD" \
+        "$RESET"
+
+    sleep 0.6
+}
+
+# -----------------------------------------------------------------------------
+# CURL
+# -----------------------------------------------------------------------------
+
+check_curl() {
+
+    if command -v curl >/dev/null 2>&1; then
+        return 0
+    fi
+
+    printf '\n'
+
+    printf '  %bCURL IS NOT INSTALLED%b\n' \
+        "$BRIGHT_RED$BOLD" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  Attempting installation...\n\n'
+
+    if command -v apt-get >/dev/null 2>&1; then
+
+        apt-get update &&
+        apt-get install -y curl
+
+    elif command -v dnf >/dev/null 2>&1; then
+
+        dnf install -y curl
+
+    elif command -v yum >/dev/null 2>&1; then
+
+        yum install -y curl
+
+    elif command -v apk >/dev/null 2>&1; then
+
+        apk add curl
+
+    else
+
+        printf '  %bAutomatic installation unavailable.%b\n' \
+            "$BRIGHT_RED" \
+            "$RESET"
+
+        return 1
+    fi
+
+    command -v curl >/dev/null 2>&1
+}
+
+# -----------------------------------------------------------------------------
+# PAUSE
+# -----------------------------------------------------------------------------
+
+pause() {
+
+    printf '\n'
+
+    printf '  %bPress ENTER to return...%b' \
+        "$GRAY" \
+        "$RESET"
+
     read -r
 }
 
-# ──────────────────────────────────────────────────────────────
-# MAIN BRAND HEADER
-# ──────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# EXECUTE MODULE
+# -----------------------------------------------------------------------------
 
-header() {
+run_module() {
 
-    clear
+    local id="$1"
 
-    printf '%b\n' "${CYAN}${BOLD}"
+    local name="${MODULE_NAME[$id]}"
+    local url="${MODULE_URL[$id]}"
+    local category="${MODULE_CATEGORY[$id]}"
+    local description="${MODULE_DESCRIPTION[$id]}"
 
-    cat <<'EOF'
-██████╗  █████╗ ██████╗  █████╗
-██╔══██╗██╔══██╗██╔══██╗██╔══██╗
-██████╔╝███████║██████╔╝███████║
-██╔═══╝ ██╔══██║██╔══██╗██╔══██║
-██║     ██║  ██║██║  ██║██║  ██║
-╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝
-EOF
+    clear_screen
 
-    printf '%b\n' "${RESET}"
+    printf '\n'
 
-    printf '%b\n' "${PURPLE}╭──────────────────────────────────────────────────────────────────────────────╮${RESET}"
-    printf '%b\n' "${PURPLE}│${RESET} ${WHITE}${BOLD}PARA CONTROL CENTER${RESET} ${GRAY}•${RESET} ${MAGENTA}SERVER MANAGEMENT SUITE${RESET}           ${PURPLE}│${RESET}"
-    printf '%b\n' "${PURPLE}│${RESET} ${GRAY}Panels • Deployment • Security • Utilities${RESET}                         ${PURPLE}│${RESET}"
-    printf '%b\n' "${PURPLE}╰──────────────────────────────────────────────────────────────────────────────╯${RESET}"
+    printf '  %bPARA%b %b// EXECUTION%b\n' \
+        "$BRIGHT_CYAN$BOLD" \
+        "$RESET" \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
 
-    echo
-}
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$BRIGHT_CYAN" \
+        "$RESET"
 
-# ──────────────────────────────────────────────────────────────
-# STATUS BAR
-# ──────────────────────────────────────────────────────────────
+    printf '\n'
 
-status_bar() {
+    printf '  %bCATEGORY%b\n' "$GRAY$BOLD" "$RESET"
 
-    get_system_info
+    printf '  %b%s%b\n\n' \
+        "$BRIGHT_MAGENTA" \
+        "$category" \
+        "$RESET"
 
-    printf '%b\n' "${BLUE}${BOLD} SYSTEM STATUS${RESET}"
-    line
+    printf '  %b' "$BRIGHT_CYAN$BOLD"
+    typewrite "$name" 0.025
+    printf '%b\n' "$RESET"
 
-    printf " ${CYAN}●${RESET} ${GRAY}HOST${RESET} ${WHITE}%-18s${RESET}" "$HOSTNAME_NOW"
-    printf " ${GREEN}●${RESET} ${GRAY}CPU${RESET} ${YELLOW}%3s%%${RESET}" "$CPU_NOW"
-    printf " ${MAGENTA}●${RESET} ${GRAY}RAM${RESET} ${PURPLE}%3s%%${RESET}" "$RAM_NOW"
-    printf " ${ORANGE}●${RESET} ${GRAY}DISK${RESET} ${CYAN}%5s${RESET}\n" "$DISK_NOW"
+    printf '  %b%s%b\n\n' \
+        "$GRAY" \
+        "$description" \
+        "$RESET"
 
-    printf " ${BLUE}●${RESET} ${GRAY}UPTIME${RESET} ${WHITE}%s${RESET}\n" "$UPTIME_NOW"
+    printf '  %bREMOTE SOURCE%b\n' \
+        "$GRAY$BOLD" \
+        "$RESET"
 
-    line
-    echo
-}
+    printf '  %b%s%b\n\n' \
+        "$GRAY" \
+        "$url" \
+        "$RESET"
 
-# ──────────────────────────────────────────────────────────────
-# REMOTE SCRIPT EXECUTOR
-# ──────────────────────────────────────────────────────────────
+    if ! check_curl; then
 
-run_remote() {
-
-    local title="$1"
-    local url="$2"
-
-    if ! command -v curl >/dev/null 2>&1; then
-
-        printf '\n%b\n' "${RED}✖ curl is not installed.${RESET}"
-        pause_menu
+        pause
         return
     fi
 
-    local temp_file
-    temp_file="$(mktemp -t para-module-XXXXXX)"
+    local temp_script
 
-    echo
-    printf '%b\n' "${CYAN}${BOLD}LAUNCHING: ${WHITE}${title}${RESET}"
-    line
+    temp_script="$(mktemp 2>/dev/null)"
 
-    printf " ${GRAY}Connecting to module...${RESET} "
+    if [ -z "$temp_script" ]; then
 
-    if curl \
+        printf '\n'
+        printf '  %bUnable to create temporary file.%b\n' \
+            "$BRIGHT_RED" \
+            "$RESET"
+
+        pause
+        return
+    fi
+
+    spinner "connecting to registry" 14
+    spinner "downloading module" 16
+
+    if ! curl \
         --fail \
         --silent \
         --show-error \
         --location \
         --connect-timeout 15 \
         --max-time 120 \
-        --output "$temp_file" \
-        "$url"; then
+        "$url" \
+        -o "$temp_script"; then
 
-        printf '%b\n' "${GREEN}CONNECTED${RESET}"
+        printf '\n'
 
-    else
+        printf '  %bDOWNLOAD FAILED%b\n' \
+            "$BRIGHT_RED$BOLD" \
+            "$RESET"
 
-        printf '%b\n' "${RED}FAILED${RESET}"
-        rm -f "$temp_file"
-        pause_menu
+        rm -f "$temp_script"
+
+        pause
         return
     fi
 
-    if [[ ! -s "$temp_file" ]]; then
+    if [ ! -s "$temp_script" ]; then
 
-        printf '%b\n' "${RED}✖ Remote module returned an empty response.${RESET}"
-        rm -f "$temp_file"
-        pause_menu
+        printf '\n'
+
+        printf '  %bEMPTY MODULE RECEIVED%b\n' \
+            "$BRIGHT_RED$BOLD" \
+            "$RESET"
+
+        rm -f "$temp_script"
+
+        pause
         return
     fi
 
-    chmod 700 "$temp_file"
+    spinner "validating bash syntax" 14
 
-    printf " ${GRAY}Module:${RESET} ${WHITE}%s${RESET}\n" "$title"
-    printf " ${GRAY}Status:${RESET} ${GREEN}READY${RESET}\n"
+    if ! bash -n "$temp_script" >/dev/null 2>&1; then
 
-    line
+        printf '\n'
 
-    bash "$temp_file"
+        printf '  %bSYNTAX CHECK FAILED%b\n' \
+            "$BRIGHT_RED$BOLD" \
+            "$RESET"
+
+        printf '  %bRemote module was NOT executed.%b\n' \
+            "$BRIGHT_YELLOW" \
+            "$RESET"
+
+        rm -f "$temp_script"
+
+        pause
+        return
+    fi
+
+    chmod 700 "$temp_script"
+
+    printf '\n'
+
+    printf '  %b✓ VALIDATED%b\n' \
+        "$BRIGHT_GREEN$BOLD" \
+        "$RESET"
+
+    printf '  %bLaunching %s...%b\n\n' \
+        "$BRIGHT_CYAN" \
+        "$name" \
+        "$RESET"
+
+    sleep 0.4
+
+    bash "$temp_script"
+
     local exit_code=$?
 
-    rm -f "$temp_file"
+    rm -f "$temp_script"
 
-    echo
+    printf '\n'
 
-    if [[ "$exit_code" -eq 0 ]]; then
-        printf '%b\n' "${GREEN}✔ ${title} completed successfully.${RESET}"
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$GRAY" \
+        "$RESET"
+
+    printf '\n'
+
+    if [ "$exit_code" -eq 0 ]; then
+
+        printf '  %b● COMPLETE%b\n' \
+            "$BRIGHT_GREEN$BOLD" \
+            "$RESET"
+
+        printf '  %b%s finished successfully.%b\n' \
+            "$GRAY" \
+            "$name" \
+            "$RESET"
+
     else
-        printf '%b\n' "${RED}✖ ${title} exited with code ${exit_code}.${RESET}"
+
+        printf '  %b● FAILED%b\n' \
+            "$BRIGHT_RED$BOLD" \
+            "$RESET"
+
+        printf '  %b%s returned exit code %s.%b\n' \
+            "$GRAY" \
+            "$name" \
+            "$exit_code" \
+            "$RESET"
     fi
 
-    pause_menu
+    pause
 }
 
-# ──────────────────────────────────────────────────────────────
-# PANELS SUBMENU
-# ──────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# MODULE LINE
+# -----------------------------------------------------------------------------
 
-panels_menu() {
+module_line() {
+
+    local id="$1"
+    local color="$2"
+
+    printf '  %b%02d%b  %b%-30s%b  %b%s%b\n' \
+        "$color" \
+        "$id" \
+        "$RESET" \
+        "$WHITE" \
+        "${MODULE_NAME[$id]}" \
+        "$RESET" \
+        "$GRAY" \
+        "${MODULE_DESCRIPTION[$id]}" \
+        "$RESET"
+}
+
+# -----------------------------------------------------------------------------
+# MENU HEADER
+# -----------------------------------------------------------------------------
+
+menu_section() {
+
+    local title="$1"
+    local color="$2"
+
+    printf '\n'
+
+    printf '  %b%s%b\n' \
+        "$color$BOLD" \
+        "$title" \
+        "$RESET"
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$color" \
+        "$RESET"
+
+    printf '\n'
+}
+
+# -----------------------------------------------------------------------------
+# FULL MODULE MENU
+# -----------------------------------------------------------------------------
+
+show_menu() {
+
+    draw_header
+
+    printf '\n'
+
+    printf '  %bWORKSPACE%b\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  %bChoose a module to launch%b\n' \
+        "$GRAY" \
+        "$RESET"
+
+    menu_section "PANELS" "$BRIGHT_CYAN"
+
+    module_line 1 "$BRIGHT_CYAN"
+    module_line 2 "$BRIGHT_CYAN"
+    module_line 3 "$BRIGHT_CYAN"
+    module_line 4 "$BRIGHT_CYAN"
+    module_line 5 "$BRIGHT_CYAN"
+    module_line 6 "$BRIGHT_CYAN"
+    module_line 7 "$BRIGHT_CYAN"
+    module_line 8 "$BRIGHT_CYAN"
+    module_line 9 "$BRIGHT_CYAN"
+    module_line 10 "$BRIGHT_CYAN"
+
+    menu_section "SERVER TOOLS" "$BRIGHT_GREEN"
+
+    module_line 11 "$BRIGHT_GREEN"
+    module_line 12 "$BRIGHT_GREEN"
+    module_line 13 "$BRIGHT_GREEN"
+    module_line 14 "$BRIGHT_GREEN"
+    module_line 15 "$BRIGHT_GREEN"
+    module_line 16 "$BRIGHT_GREEN"
+    module_line 17 "$BRIGHT_GREEN"
+    module_line 18 "$BRIGHT_GREEN"
+    module_line 19 "$BRIGHT_GREEN"
+
+    menu_section "PTERODACTYL" "$BRIGHT_MAGENTA"
+
+    module_line 20 "$BRIGHT_MAGENTA"
+    module_line 21 "$BRIGHT_MAGENTA"
+    module_line 22 "$BRIGHT_MAGENTA"
+    module_line 23 "$BRIGHT_MAGENTA"
+    module_line 24 "$BRIGHT_MAGENTA"
+    module_line 26 "$BRIGHT_MAGENTA"
+    module_line 28 "$BRIGHT_MAGENTA"
+    module_line 31 "$BRIGHT_MAGENTA"
+
+    menu_section "NETWORK / SERVER" "$BRIGHT_YELLOW"
+
+    module_line 25 "$BRIGHT_YELLOW"
+    module_line 27 "$BRIGHT_YELLOW"
+    module_line 29 "$BRIGHT_YELLOW"
+    module_line 30 "$BRIGHT_YELLOW"
+
+    menu_section "VPS" "$BRIGHT_BLUE"
+
+    module_line 32 "$BRIGHT_BLUE"
+    module_line 33 "$BRIGHT_BLUE"
+
+    printf '\n'
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$GRAY" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %b[ C ]%b  Cloudflare Settings\n' \
+        "$BRIGHT_CYAN$BOLD" \
+        "$RESET"
+
+    printf '  %b[ I ]%b  System Information\n' \
+        "$BRIGHT_BLUE$BOLD" \
+        "$RESET"
+
+    printf '  %b[ R ]%b  Refresh\n' \
+        "$BRIGHT_GREEN$BOLD" \
+        "$RESET"
+
+    printf '  %b[ Q ]%b  Exit\n' \
+        "$BRIGHT_RED$BOLD" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bPARA%b %b>%b ' \
+        "$BRIGHT_CYAN$BOLD" \
+        "$RESET" \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+}
+
+# -----------------------------------------------------------------------------
+# CLOUDFARE SETTINGS
+# -----------------------------------------------------------------------------
+
+cloudflare_settings() {
+
+    clear_screen
+
+    printf '\n'
+
+    printf '  %bCLOUDFLARE%b %b// SETTINGS%b\n' \
+        "$BRIGHT_MAGENTA$BOLD" \
+        "$RESET" \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$BRIGHT_MAGENTA" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bPANEL%b\n\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  %bTYPE%b       %bHTTPS%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_GREEN" \
+        "$RESET"
+
+    printf '  %bSERVICE%b    %blocalhost%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_CYAN" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bNODE%b\n\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  %bTYPE%b       %bHTTPS%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_GREEN" \
+        "$RESET"
+
+    printf '  %bSERVICE%b    %blocalhost:8080%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_CYAN" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bSTATUS%b     %b● READY%b\n' \
+        "$GRAY" \
+        "$RESET" \
+        "$BRIGHT_GREEN$BOLD" \
+        "$RESET"
+
+    pause
+}
+
+# -----------------------------------------------------------------------------
+# SYSTEM INFORMATION
+# -----------------------------------------------------------------------------
+
+system_info() {
+
+    clear_screen
+
+    printf '\n'
+
+    printf '  %bSYSTEM%b %b// TELEMETRY%b\n' \
+        "$BRIGHT_BLUE$BOLD" \
+        "$RESET" \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
+        "$BRIGHT_BLUE" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bHOST%b\n\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  Hostname       %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$(get_hostname)" \
+        "$RESET"
+
+    printf '  User           %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$(whoami)" \
+        "$RESET"
+
+    printf '  Directory      %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$PWD" \
+        "$RESET"
+
+    printf '  System         %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$(uname -srm)" \
+        "$RESET"
+
+    printf '  Uptime         %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$(get_uptime)" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bRESOURCES%b\n\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  CPU            %b%s%%%b\n' \
+        "$BRIGHT_GREEN" \
+        "$(get_cpu)" \
+        "$RESET"
+
+    printf '  Memory         %b%s%b\n' \
+        "$BRIGHT_MAGENTA" \
+        "$(free -h 2>/dev/null | awk '/Mem:/ {print $3 "/" $2}')" \
+        "$RESET"
+
+    printf '  Disk           %b%s%b\n' \
+        "$BRIGHT_YELLOW" \
+        "$(df -h / 2>/dev/null | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')" \
+        "$RESET"
+
+    printf '\n'
+
+    printf '  %bMODULE REGISTRY%b\n\n' \
+        "$BRIGHT_WHITE$BOLD" \
+        "$RESET"
+
+    printf '  Registered modules    %b%s%b\n' \
+        "$BRIGHT_CYAN" \
+        "$MODULE_COUNT" \
+        "$RESET"
+
+    printf '  Remote source         %bGitHub%b\n' \
+        "$BRIGHT_CYAN" \
+        "$RESET"
+
+    printf '  Runtime               %bBash%b\n' \
+        "$BRIGHT_CYAN" \
+        "$RESET"
+
+    pause
+}
+
+# -----------------------------------------------------------------------------
+# EXIT
+# -----------------------------------------------------------------------------
+
+exit_console() {
+
+    clear_screen
+
+    printf '\n\n'
+
+    printf '  %b' "$BRIGHT_CYAN$BOLD"
+
+    typewrite "Closing PARA workspace..." 0.025
+
+    printf '%b\n' "$RESET"
+
+    sleep 0.4
+
+    printf '\n'
+
+    printf '  %b● SESSION CLOSED%b\n' \
+        "$BRIGHT_GREEN$BOLD" \
+        "$RESET"
+
+    printf '  %bCredits: Para%b\n\n' \
+        "$GRAY" \
+        "$RESET"
+
+    exit 0
+}
+
+# -----------------------------------------------------------------------------
+# MAIN
+# -----------------------------------------------------------------------------
+
+main() {
+
+    hide_cursor
+
+    boot_screen
 
     while true; do
 
-        header
+        show_menu
 
-        printf '%b\n' "${MAGENTA}${BOLD} PANEL DEPLOYMENT CENTER${RESET}"
-        printf '%b\n' "${GRAY}Install and manage supported hosting panels and dashboards.${RESET}"
-        echo
+        read -r choice
 
-        line
+        case "$choice" in
 
-        printf '%b\n' "${CYAN}${BOLD} AVAILABLE PANELS${RESET}"
-        echo
+            # -----------------------------------------------------------------
+            # ALL MODULES
+            # -----------------------------------------------------------------
 
-        printf " ${CYAN}[01]${RESET} ${WHITE}${BOLD}Pterodactyl Hub${RESET}       ${GRAY}Pterodactyl management hub${RESET}\n"
-        printf " ${PURPLE}[02]${RESET} ${WHITE}${BOLD}Reviactyl Panel${RESET}       ${GRAY}Reviactyl installer${RESET}\n"
-        printf " ${BLUE}[03]${RESET} ${WHITE}${BOLD}Jexcatyl Panel${RESET}        ${GRAY}Jexcatyl installer${RESET}\n"
-        printf " ${MAGENTA}[04]${RESET} ${WHITE}${BOLD}Mythical Dash${RESET}         ${GRAY}Mythical dashboard${RESET}\n"
-        printf " ${GREEN}[05]${RESET} ${WHITE}${BOLD}Cockpit${RESET}               ${GRAY}Cockpit installation${RESET}\n"
-        printf " ${YELLOW}[06]${RESET} ${WHITE}${BOLD}WHMCS${RESET}                 ${GRAY}WHMCS deployment${RESET}\n"
-        printf " ${ORANGE}[07]${RESET} ${WHITE}${BOLD}Convoy${RESET}                ${GRAY}Convoy installation${RESET}\n"
-        printf " ${CYAN}[08]${RESET} ${WHITE}${BOLD}XRDP${RESET}                  ${GRAY}Remote desktop setup${RESET}\n"
-        printf " ${PURPLE}[09]${RESET} ${WHITE}${BOLD}Paymenter${RESET}             ${GRAY}Paymenter deployment${RESET}\n"
-        printf " ${RED}[10]${RESET} ${WHITE}${BOLD}HVM V8${RESET}                ${GRAY}HVM V8 installer${RESET}\n"
+            1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33)
 
-        echo
-        line
+                run_module "$choice"
 
-        printf " ${RED}[0]${RESET} ${GRAY}← Return to main menu${RESET}\n"
-
-        echo
-        printf '%b' "${CYAN}${BOLD} PANELS › ${RESET}"
-
-        read -r panel_choice
-
-        case "$panel_choice" in
-
-            1|01)
-                run_remote "${PANEL_NAMES[1]}" "${PANEL_URLS[1]}"
                 ;;
 
-            2|02)
-                run_remote "${PANEL_NAMES[2]}" "${PANEL_URLS[2]}"
+            # -----------------------------------------------------------------
+            # SPECIAL
+            # -----------------------------------------------------------------
+
+            c|C)
+
+                cloudflare_settings
+
                 ;;
 
-            3|03)
-                run_remote "${PANEL_NAMES[3]}" "${PANEL_URLS[3]}"
+            i|I)
+
+                system_info
+
                 ;;
 
-            4|04)
-                run_remote "${PANEL_NAMES[4]}" "${PANEL_URLS[4]}"
+            r|R)
+
+                spinner "refreshing workspace" 15
+
                 ;;
 
-            5|05)
-                run_remote "${PANEL_NAMES[5]}" "${PANEL_URLS[5]}"
-                ;;
+            q|Q|0|exit|quit)
 
-            6|06)
-                run_remote "${PANEL_NAMES[6]}" "${PANEL_URLS[6]}"
-                ;;
+                exit_console
 
-            7|07)
-                run_remote "${PANEL_NAMES[7]}" "${PANEL_URLS[7]}"
-                ;;
-
-            8|08)
-                run_remote "${PANEL_NAMES[8]}" "${PANEL_URLS[8]}"
-                ;;
-
-            9|09)
-                run_remote "${PANEL_NAMES[9]}" "${PANEL_URLS[9]}"
-                ;;
-
-            10)
-                run_remote "${PANEL_NAMES[10]}" "${PANEL_URLS[10]}"
-                ;;
-
-            0|back|b)
-                return
                 ;;
 
             *)
-                printf '\n%b\n' "${RED}✖ Invalid panel selection.${RESET}"
-                sleep 1
+
+                printf '\n'
+
+                printf '  %bUnknown command.%b\n' \
+                    "$BRIGHT_RED$BOLD" \
+                    "$RESET"
+
+                sleep 0.7
+
                 ;;
         esac
+
     done
 }
 
-# ──────────────────────────────────────────────────────────────
-# MAIN UTILITIES MENU
-# ──────────────────────────────────────────────────────────────
-
-tools_menu() {
-
-    while true; do
-
-        header
-
-        printf '%b\n' "${BLUE}${BOLD} SERVER UTILITIES${RESET}"
-        printf '%b\n' "${GRAY}System administration, networking and server tools.${RESET}"
-        echo
-
-        line
-
-        printf '%b\n' "${CYAN}${BOLD} UTILITY MODULES${RESET}"
-        echo
-
-        printf " ${GREEN}[01]${RESET} ${WHITE}${BOLD}Auto Root${RESET}             ${GRAY}SSH / root configuration${RESET}\n"
-        printf " ${ORANGE}[02]${RESET} ${WHITE}${BOLD}Cloudflare Installer${RESET}  ${GRAY}Cloudflare deployment${RESET}\n"
-        printf " ${CYAN}[03]${RESET} ${WHITE}${BOLD}Docker VM${RESET}             ${GRAY}Docker container tools${RESET}\n"
-        printf " ${PURPLE}[04]${RESET} ${WHITE}${BOLD}Local SSL Generator${RESET}   ${GRAY}Local certificate utility${RESET}\n"
-        printf " ${YELLOW}[05]${RESET} ${WHITE}${BOLD}Swap RAM${RESET}              ${GRAY}Swap memory management${RESET}\n"
-        printf " ${BLUE}[06]${RESET} ${WHITE}${BOLD}Nginx Reload${RESET}          ${GRAY}Nginx reload utility${RESET}\n"
-        printf " ${MAGENTA}[07]${RESET} ${WHITE}${BOLD}Blueprint Installer${RESET}   ${GRAY}Pterodactyl Blueprint tool${RESET}\n"
-        printf " ${GREEN}[08]${RESET} ${WHITE}${BOLD}VPS Menu${RESET}              ${GRAY}VPS management tools${RESET}\n"
-        printf " ${CYAN}[09]${RESET} ${WHITE}${BOLD}Custom MOTD Builder${RESET}   ${GRAY}Terminal MOTD generator${RESET}\n"
-
-        echo
-        line
-
-        printf " ${RED}[0]${RESET} ${GRAY}← Return to main menu${RESET}\n"
-
-        echo
-        printf '%b' "${BLUE}${BOLD} TOOLS › ${RESET}"
-
-        read -r tool_choice
-
-        case "$tool_choice" in
-
-            1|01)
-                run_remote "${TOOL_NAMES[1]}" "${TOOL_URLS[1]}"
-                ;;
-
-            2|02)
-                run_remote "${TOOL_NAMES[2]}" "${TOOL_URLS[2]}"
-                ;;
-
-            3|03)
-                run_remote "${TOOL_NAMES[3]}" "${TOOL_URLS[3]}"
-                ;;
-
-            4|04)
-                run_remote "${TOOL_NAMES[4]}" "${TOOL_URLS[4]}"
-                ;;
-
-            5|05)
-                run_remote "${TOOL_NAMES[5]}" "${TOOL_URLS[5]}"
-                ;;
-
-            6|06)
-                run_remote "${TOOL_NAMES[6]}" "${TOOL_URLS[6]}"
-                ;;
-
-            7|07)
-                run_remote "${TOOL_NAMES[7]}" "${TOOL_URLS[7]}"
-                ;;
-
-            8|08)
-                run_remote "${TOOL_NAMES[8]}" "${TOOL_URLS[8]}"
-                ;;
-
-            9|09)
-                run_remote "${TOOL_NAMES[9]}" "${TOOL_URLS[9]}"
-                ;;
-
-            0|back|b)
-                return
-                ;;
-
-            *)
-                printf '\n%b\n' "${RED}✖ Invalid utility selection.${RESET}"
-                sleep 1
-                ;;
-        esac
-    done
-}
-
-# ──────────────────────────────────────────────────────────────
-# MAIN MENU
-# ──────────────────────────────────────────────────────────────
-
-main_menu() {
-
-    while true; do
-
-        header
-        status_bar
-
-        printf '%b\n' "${WHITE}${BOLD} MAIN CONTROL${RESET}"
-        echo
-
-        printf " ${MAGENTA}${BOLD}[1]${RESET} ${WHITE}${BOLD}Panels${RESET}        ${GRAY}Hosting panels & dashboard installers${RESET}\n"
-        printf " ${BLUE}${BOLD}[2]${RESET} ${WHITE}${BOLD}Server Tools${RESET} ${GRAY}Security, Docker, SSL & VPS utilities${RESET}\n"
-        printf " ${CYAN}${BOLD}[3]${RESET} ${WHITE}${BOLD}System Info${RESET}  ${GRAY}Refresh server telemetry${RESET}\n"
-
-        echo
-        line
-
-        printf " ${RED}${BOLD}[0]${RESET} ${WHITE}${BOLD}Exit${RESET}           ${GRAY}Close Para Control Center${RESET}\n"
-
-        echo
-        printf '%b' "${CYAN}${BOLD} PARA › ${RESET}"
-
-        read -r main_choice
-
-        case "$main_choice" in
-
-            1)
-                panels_menu
-                ;;
-
-            2)
-                tools_menu
-                ;;
-
-            3)
-                sleep 1
-                ;;
-
-            0|exit|quit|q)
-                clear
-
-                echo
-                printf '%b\n' "${PURPLE}╭────────────────────────────────────────────────────────────╮${RESET}"
-                printf '%b\n' "${PURPLE}│${RESET} ${CYAN}${BOLD} PARA CONTROL CENTER${RESET}                               ${PURPLE}│${RESET}"
-                printf '%b\n' "${PURPLE}│${RESET} ${GREEN}Session terminated successfully.${RESET}                   ${PURPLE}│${RESET}"
-                printf '%b\n' "${PURPLE}│${RESET} ${GRAY}Credits: ${MAGENTA}Para${RESET}                                      ${PURPLE}│${RESET}"
-                printf '%b\n' "${PURPLE}╰────────────────────────────────────────────────────────────╯${RESET}"
-                echo
-
-                exit 0
-                ;;
-
-            *)
-                printf '\n%b\n' "${RED}✖ Invalid selection.${RESET}"
-                sleep 1
-                ;;
-        esac
-    done
-}
-
-# ──────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # START
-# ──────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
-main_menu
+main
+```
