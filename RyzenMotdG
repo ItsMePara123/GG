@@ -50,7 +50,7 @@ USERS=$(who | wc -l)
 PROCS=$(ps -e --no-headers | wc -l)
 
 # ===== Logo =====
-echo -e "${GREEN}"
+echo -e "${YELLOW}"
 cat << "LOGO"
 
   _____                      _____ _                 _ 
@@ -83,8 +83,8 @@ printf "  ${YELLOW}IP Address   :${RESET} %s\n" "$IP"
 printf "  ${YELLOW}Uptime       :${RESET} %s\n\n" "$UPTIME"
 
 # ===== Footer =====
-echo -e "${GREEN}Support:${RESET} support@ryzencloud.fun"
-echo -e "${GREEN}Website:${RESET} https://ryzencloud.fun"
+echo -e "${GREEN}Support:${RESET} support@ryzencloud.in"
+echo -e "${GREEN}Website:${RESET} https://ryzencloud.in"
 echo -e "${CYAN}Quality Wise — No Compromise 😄${RESET}"
 EOF
 
