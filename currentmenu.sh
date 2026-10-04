@@ -55,12 +55,6 @@ AUTHOR="Para"
 
 # -----------------------------------------------------------------------------
 # MODULE REGISTRY
-#
-# Every module has:
-#   NAME
-#   URL
-#   CATEGORY
-#   DESCRIPTION
 # -----------------------------------------------------------------------------
 
 declare -A MODULE_NAME
@@ -172,7 +166,7 @@ MODULE_CATEGORY[19]="SERVER TOOLS"
 MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 
 # =============================================================================
-# NEW / New
+# PTERODACTYL / NETWORKING / VPS
 # =============================================================================
 
 MODULE_NAME[20]="Pterodactyl Panel Installer"
@@ -240,15 +234,11 @@ MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/mai
 MODULE_CATEGORY[32]="VPS"
 MODULE_DESCRIPTION[32]="VPS creation utility"
 
-MODULE_NAME[33]="GitHub VPS Maker"
-MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
-MODULE_CATEGORY[33]="VPS"
-MODULE_DESCRIPTION[33]="GitHub VPS management utility"
-
-MODULE_NAME[33]="Proxmox Installer Debain 13"
+# Fixed duplicate ID: Proxmox is 33
+MODULE_NAME[33]="Proxmox Installer Debian 13"
 MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/proxmoxinstaller"
 MODULE_CATEGORY[33]="VPS"
-MODULE_DESCRIPTION[33]="Proxmox Installer In Debain 13"
+MODULE_DESCRIPTION[33]="Proxmox Installer in Debian 13"
 
 MODULE_COUNT=33
 
@@ -703,13 +693,13 @@ run_module() {
         "$description" \
         "$RESET"
 
-    printf '  %bREMOTE SOURCE%b\n' \
-        "$GRAY$BOLD" \
-        "$RESET"
+    # REMOTE SOURCE / URL DISPLAY REMOVED
+    # URL is still used internally by curl below.
 
-    printf '  %b%s%b\n\n' \
-        "$GRAY" \
-        "$url" \
+    printf '  %bMODULE%b  %bREADY%b\n\n' \
+        "$GRAY$BOLD" \
+        "$RESET" \
+        "$BRIGHT_GREEN" \
         "$RESET"
 
     if ! check_curl; then
@@ -725,6 +715,7 @@ run_module() {
     if [ -z "$temp_script" ]; then
 
         printf '\n'
+
         printf '  %bUnable to create temporary file.%b\n' \
             "$BRIGHT_RED" \
             "$RESET"
