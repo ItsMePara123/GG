@@ -172,7 +172,7 @@ MODULE_CATEGORY[19]="SERVER TOOLS"
 MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 
 # =============================================================================
-# NEW / NOBITA MENU MODULES
+# NEW / New
 # =============================================================================
 
 MODULE_NAME[20]="Pterodactyl Panel Installer"
@@ -244,6 +244,11 @@ MODULE_NAME[33]="GitHub VPS Maker"
 MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
 MODULE_CATEGORY[33]="VPS"
 MODULE_DESCRIPTION[33]="GitHub VPS management utility"
+
+MODULE_NAME[33]="Proxmox Installer Debain 13"
+MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/proxmoxinstaller"
+MODULE_CATEGORY[33]="VPS"
+MODULE_DESCRIPTION[33]="Proxmox Installer In Debain 13"
 
 MODULE_COUNT=33
 
