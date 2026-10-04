@@ -1,0 +1,302 @@
+
+#!/usr/bin/env bash
+
+# ============================================================
+#       PROXMOX VE INSTALLER — DEBIAN 13 TRIXIE
+#       Premium Terminal UI | Para.exe
+# ============================================================
+
+set -Eeuo pipefail
+
+# -------------------- CONFIGURATION -------------------------
+
+HOSTNAME="pve"
+DOMAIN="pve.localdomain"
+CODENAME="trixie"
+REPO_FILE="/etc/apt/sources.list.d/pve-install-repo.list"
+KEY_FILE="/usr/share/keyrings/proxmox-archive-keyring.gpg"
+KEY_URL="https://enterprise.proxmox.com/debian/proxmox-release-trixie.gpg"
+
+# -------------------- COLORS -------------------------------
+
+RESET='\033[0m'
+BOLD='\033[1m'
+DIM='\033[2m'
+
+RED='\033[38;5;196m'
+GREEN='\033[38;5;82m'
+YELLOW='\033[38;5;220m'
+CYAN='\033[38;5;51m'
+BLUE='\033[38;5;39m'
+PURPLE='\033[38;5;141m'
+WHITE='\033[38;5;255m'
+GRAY='\033[38;5;245m'
+
+# -------------------- UI FUNCTIONS -------------------------
+
+line() {
+    echo -e "${GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+}
+
+small_line() {
+    echo -e "${GRAY}────────────────────────────────────────────────────────────${RESET}"
+}
+
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.018}"
+
+    for ((i=0; i<${#text}; i++)); do
+        printf "%s" "${text:i:1}"
+        sleep "$delay"
+    done
+    printf "\n"
+}
+
+header() {
+    echo
+    echo -e "${PURPLE}${BOLD}◆ $1${RESET}"
+    small_line
+}
+
+info() {
+    echo -e "  ${CYAN}◆${RESET} $1"
+}
+
+success() {
+    echo -e "  ${GREEN}✔${RESET} $1"
+}
+
+warn() {
+    echo -e "  ${YELLOW}⚠${RESET} $1"
+}
+
+fail() {
+    echo -e "  ${RED}✖${RESET} $1"
+}
+
+pause() {
+    echo
+    read -rp "  Press Enter to exit..."
+}
+
+# -------------------- ERROR HANDLER ------------------------
+
+on_error() {
+    local code=$?
+    echo
+    fail "Installer stopped with exit code ${code}."
+    warn "Review the error above before retrying."
+    exit "$code"
+}
+trap on_error ERR
+
+# -------------------- ROOT CHECK ---------------------------
+
+if [[ "$EUID" -ne 0 ]]; then
+    echo -e "${RED}Please run this installer as root.${RESET}"
+    echo -e "${GRAY}Example: sudo bash proxmox-installer.sh${RESET}"
+    exit 1
+fi
+
+# -------------------- BANNER -------------------------------
+
+clear
+
+echo -e "${CYAN}${BOLD}"
+cat <<'EOF'
+
+    ██████╗ ██████╗  ██████╗ ██╗  ██╗███╗   ███╗ ██████╗ ██╗  ██╗
+    ██╔══██╗██╔══██╗██╔═══██╗╚██╗██╔╝████╗ ████║██╔═══██╗╚██╗██╔╝
+    ██████╔╝██████╔╝██║   ██║ ╚███╔╝ ██╔████╔██║██║   ██║ ╚███╔╝
+    ██╔═══╝ ██╔══██╗██║   ██║ ██╔██╗ ██║╚██╔╝██║██║   ██║ ██╔██╗
+    ██║     ██║  ██║╚██████╔╝██╔╝ ██╗██║ ╚═╝ ██║╚██████╔╝██╔╝ ██╗
+    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝
+
+EOF
+echo -e "${RESET}"
+
+echo -e "                  ${GREEN}PROXMOX VE INSTALLER${RESET}"
+echo -e "                  ${GRAY}DEBIAN 13 • TRIXIE${RESET}"
+echo
+line
+
+typewrite "  Initializing Proxmox deployment..." 0.025
+echo
+
+# -------------------- SYSTEM CHECKS ------------------------
+
+header "SYSTEM VALIDATION"
+
+if [[ ! -f /etc/debian_version ]]; then
+    fail "This installer requires Debian."
+    exit 1
+fi
+
+if ! grep -qi "trixie" /etc/os-release; then
+    fail "This installer is intended for Debian 13 Trixie."
+    exit 1
+fi
+
+if [[ -e /etc/pve ]]; then
+    warn "An existing Proxmox configuration was detected."
+    warn "Continuing may damage an existing installation."
+    exit 1
+fi
+
+success "Running as root"
+success "Debian 13 Trixie detected"
+
+ARCH="$(dpkg --print-architecture)"
+if [[ "$ARCH" != "amd64" ]]; then
+    fail "Unsupported architecture: ${ARCH}. Proxmox VE requires amd64 for this installer."
+    exit 1
+fi
+
+success "Architecture: ${ARCH}"
+
+IP="$(hostname -I | awk '{print $1}')"
+if [[ -z "$IP" ]]; then
+    fail "Could not detect a server IP address."
+    exit 1
+fi
+
+info "Detected IP: ${IP}"
+info "Target hostname: ${HOSTNAME}.${DOMAIN}"
+
+# -------------------- CONFIRMATION --------------------------
+
+echo
+line
+echo -e "${YELLOW}${BOLD}IMPORTANT — PLEASE READ${RESET}"
+echo
+echo "This installer will:"
+echo "  • Set the hostname to pve"
+echo "  • Add the Proxmox VE no-subscription repository"
+echo "  • Install the Proxmox VE kernel and packages"
+echo "  • Reboot the server after installation"
+echo
+warn "Use only on a suitable fresh Debian 13 server."
+warn "Ensure you have console or provider recovery access."
+echo
+read -rp "  Continue with installation? [y/N]: " CONFIRM
+
+if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+    warn "Installation cancelled."
+    exit 0
+fi
+
+# -------------------- PROGRESS -----------------------------
+
+step() {
+    echo
+    echo -e "${BLUE}${BOLD}[$1/$2]${RESET} ${WHITE}$3${RESET}"
+    small_line
+}
+
+TOTAL_STEPS=6
+
+# -------------------- STEP 1 -------------------------------
+
+step 1 "$TOTAL_STEPS" "Updating system and installing dependencies"
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y wget gnupg2 ca-certificates
+
+success "Dependencies installed"
+
+# -------------------- STEP 2 -------------------------------
+
+step 2 "$TOTAL_STEPS" "Configuring hostname"
+
+hostnamectl set-hostname "$HOSTNAME"
+
+# Remove previous matching entries to avoid duplicate hostname mappings.
+if ! grep -Eq "^[[:space:]]*${IP}[[:space:]]+.*(^|[[:space:]])${HOSTNAME}([[:space:]]|$)" /etc/hosts; then
+    printf '%s %s %s\n' "$IP" "$DOMAIN" "$HOSTNAME" >> /etc/hosts
+fi
+
+success "Hostname configured: ${HOSTNAME}"
+
+# -------------------- STEP 3 -------------------------------
+
+step 3 "$TOTAL_STEPS" "Installing Proxmox repository key"
+
+wget -qO "$KEY_FILE" "$KEY_URL"
+chmod 644 "$KEY_FILE"
+
+success "Repository key downloaded"
+
+# -------------------- STEP 4 -------------------------------
+
+step 4 "$TOTAL_STEPS" "Adding Proxmox VE repository"
+
+cat > "$REPO_FILE" <<EOF
+deb [signed-by=${KEY_FILE}] http://download.proxmox.com/debian/pve ${CODENAME} pve-no-subscription
+EOF
+
+success "Proxmox VE repository configured"
+
+# -------------------- STEP 5 -------------------------------
+
+step 5 "$TOTAL_STEPS" "Refreshing package repositories"
+
+apt-get update
+
+success "Package lists refreshed"
+
+# -------------------- STEP 6 -------------------------------
+
+step 6 "$TOTAL_STEPS" "Installing Proxmox VE"
+
+apt-get install -y \
+    proxmox-default-kernel \
+    proxmox-ve \
+    postfix \
+    open-iscsi \
+    chrony
+
+success "Proxmox VE packages installed"
+
+# -------------------- COMPLETION ---------------------------
+
+echo
+line
+echo -e "${GREEN}${BOLD}"
+cat <<'EOF'
+       ██████╗  ██████╗ ███╗   ██╗███████╗
+       ██╔══██╗██╔═══██╗████╗  ██║██╔════╝
+       ██████╔╝██║   ██║██╔██╗ ██║█████╗
+       ██╔══██╗██║   ██║██║╚██╗██║██╔══╝
+       ██████╔╝╚██████╔╝██║ ╚████║███████╗
+       ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+EOF
+echo -e "${RESET}"
+
+echo -e "              ${GREEN}${BOLD}INSTALLATION FINISHED${RESET}"
+echo
+success "Proxmox VE packages installed."
+info "Server IP: ${IP}"
+info "Hostname: ${HOSTNAME}"
+info "Web interface: https://${IP}:8006"
+echo
+line
+
+echo -e "${YELLOW}${BOLD}A reboot is required to load the Proxmox kernel.${RESET}"
+echo
+read -rp "  Reboot now? [y/N]: " REBOOT_CONFIRM
+
+if [[ "$REBOOT_CONFIRM" =~ ^[Yy]$ ]]; then
+    echo
+    typewrite "  Rebooting system..." 0.03
+    reboot
+else
+    warn "Reboot skipped. Reboot manually when ready."
+fi
+
+echo
+echo -e "${PURPLE}${BOLD}              PARA.EXE${RESET}"
+echo -e "${GRAY}       Proxmox VE Installer • Debian Trixie${RESET}"
+echo
