@@ -969,7 +969,7 @@ show_category() {
             found=1
         fi
 
-        for id in $(printf '%s\\n' "${!MODULE_NAME[@]}" | sort -n); do
+        for id in $(printf '%s\n' "${!MODULE_NAME[@]}" | sort -n); do
             if [[ "${MODULE_CATEGORY[$id]}" == "$category" && "$id" != "38" ]]; then
                 module_line "$id" "$color"
                 found=1
