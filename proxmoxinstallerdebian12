@@ -1,0 +1,182 @@
+
+#!/usr/bin/env bash
+
+# =============================================================================
+#                         PARA.EXE // INFRASTRUCTURE
+#                         PROXMOX VE INSTALLER
+#
+# Credits : Para
+# Version : 1.0
+# Target  : Debian 12 (Bookworm)
+# =============================================================================
+
+# ---------- COLORS ----------
+CYAN='\033[38;5;51m'
+PURPLE='\033[38;5;141m'
+GRAY='\033[38;5;242m'
+WHITE='\033[38;5;255m'
+GREEN='\033[38;5;82m'
+RED='\033[38;5;196m'
+GOLD='\033[38;5;214m'
+NC='\033[0m'
+
+# ---------- TYPEWRITER EFFECT ----------
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.012}"
+
+    for ((i=0; i<${#text}; i++)); do
+        printf '%s' "${text:$i:1}"
+        sleep "$delay"
+    done
+    printf '\n'
+}
+
+# ---------- ROOT CHECK ----------
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}[ERROR] Run this installer as root.${NC}"
+    echo "Example: sudo bash proxmox-install.sh"
+    exit 1
+fi
+
+# ---------- ERROR HANDLING ----------
+set -Eeuo pipefail
+
+trap 'echo -e "\n${RED}[ERROR] Installation failed at line $LINENO.${NC}"; exit 1' ERR
+
+clear
+
+# ---------- BANNER ----------
+echo -e "${CYAN}"
+cat <<'EOF'
+ ____   _    ____      _   _____  __
+|  _ \ / \  |  _ \    / \ | ____| \ \
+| |_) / _ \ | |_) |  / _ \|  _|    \ \
+|  __/ ___ \|  _ <  / ___ \ |___   / /
+|_| /_/   \_\_| \_\/_/   \_\_____| /_/
+EOF
+echo -e "${PURPLE}             PROXMOX VE INSTALLER${NC}"
+echo -e "${GRAY}          Debian Bookworm Edition${NC}"
+echo -e "${GOLD}              Credits: PARA.EXE${NC}"
+echo -e "${CYAN}============================================================${NC}"
+echo
+
+typewrite "[PARA.EXE] Initializing installation environment..." 0.02
+sleep 0.5
+
+# ---------- OS VALIDATION ----------
+if [[ ! -r /etc/os-release ]]; then
+    echo -e "${RED}[ERROR] Cannot detect the operating system.${NC}"
+    exit 1
+fi
+
+source /etc/os-release
+
+if [[ "${ID:-}" != "debian" || "${VERSION_CODENAME:-}" != "bookworm" ]]; then
+    echo -e "${RED}[ERROR] This installer requires Debian 12 (Bookworm).${NC}"
+    echo -e "${GOLD}Detected: ${PRETTY_NAME:-Unknown}${NC}"
+    echo -e "${WHITE}The configured Proxmox repository is for Bookworm.${NC}"
+    exit 1
+fi
+
+# ---------- SYSTEM INFORMATION ----------
+IP=$(hostname -I | awk '{print $1}')
+
+if [[ -z "$IP" ]]; then
+    echo -e "${RED}[ERROR] Could not detect the server IP address.${NC}"
+    exit 1
+fi
+
+echo -e "${WHITE}Detected IP : ${CYAN}${IP}${NC}"
+echo -e "${WHITE}Hostname    : ${CYAN}pve${NC}"
+echo -e "${WHITE}Repository  : ${CYAN}Bookworm / No-Subscription${NC}"
+echo
+
+read -r -p "$(echo -e "${GOLD}Start Proxmox VE installation? [Y/N]: ${NC}")" START
+case "$START" in
+    [Yy]|[Yy][Ee][Ss]) ;;
+    *)
+        echo -e "${RED}Installation cancelled.${NC}"
+        exit 0
+        ;;
+esac
+
+echo
+typewrite "[1/6] Updating package lists..." 0.015
+apt update
+
+echo
+typewrite "[2/6] Installing required packages..." 0.015
+DEBIAN_FRONTEND=noninteractive apt install -y \
+    wget \
+    gnupg2 \
+    ca-certificates
+
+echo
+typewrite "[3/6] Configuring hostname and hosts file..." 0.015
+hostnamectl set-hostname pve
+
+# Avoid repeatedly adding the same Proxmox hostname entries.
+if ! grep -Eq '^[[:space:]]*[^#]*[[:space:]]pve\.localdomain([[:space:]]|$)' /etc/hosts; then
+    echo "$IP pve.localdomain pve" >> /etc/hosts
+fi
+
+echo
+typewrite "[4/6] Configuring the Proxmox repository..." 0.015
+
+install -d -m 0755 /usr/share/keyrings
+
+wget -qO /usr/share/keyrings/proxmox-archive-keyring.gpg \
+    https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg
+
+cat > /etc/apt/sources.list.d/pve-install-repo.list <<'EOF'
+deb [signed-by=/usr/share/keyrings/proxmox-archive-keyring.gpg] http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+EOF
+
+echo
+typewrite "[5/6] Refreshing repositories..." 0.015
+apt update
+
+echo
+typewrite "[6/6] Installing Proxmox VE packages..." 0.015
+
+DEBIAN_FRONTEND=noninteractive apt install -y \
+    proxmox-default-kernel \
+    proxmox-ve \
+    postfix \
+    open-iscsi \
+    chrony
+
+echo
+echo -e "${GREEN}============================================================${NC}"
+typewrite "       PROXMOX VE INSTALLATION COMPLETED" 0.025
+echo -e "${GREEN}============================================================${NC}"
+echo -e "${WHITE}Hostname : ${CYAN}pve${NC}"
+echo -e "${WHITE}Server IP: ${CYAN}${IP}${NC}"
+echo
+echo -e "${GOLD}A reboot is recommended to load the Proxmox kernel.${NC}"
+echo
+
+# ---------- FINAL REBOOT CONFIRMATION ----------
+while true; do
+    read -r -p "$(echo -e "${PURPLE}Reboot the server now? [Y/N]: ${NC}")" REBOOT
+
+    case "$REBOOT" in
+        [Yy]|[Yy][Ee][Ss])
+            echo
+            typewrite "[PARA.EXE] Rebooting server..." 0.025
+            sleep 1
+            systemctl reboot
+            break
+            ;;
+        [Nn]|[Nn][Oo])
+            echo
+            typewrite "[PARA.EXE] Reboot skipped. Reboot manually when ready." 0.02
+            echo -e "${GOLD}Command: ${WHITE}reboot${NC}"
+            break
+            ;;
+        *)
+            echo -e "${RED}Invalid choice. Enter Y or N.${NC}"
+            ;;
+    esac
+done
