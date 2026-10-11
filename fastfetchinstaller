@@ -1,0 +1,127 @@
+
+#!/usr/bin/env bash
+
+# =============================================================================
+#                         PARA.EXE // SYSTEM TOOLS
+#                            FASTFETCH INSTALLER
+#
+# Credits : Para
+# Version : 1.0
+# =============================================================================
+
+# ---------- COLORS ----------
+CYAN='\033[38;5;51m'
+PURPLE='\033[38;5;141m'
+GRAY='\033[38;5;242m'
+WHITE='\033[38;5;255m'
+GREEN='\033[38;5;82m'
+RED='\033[38;5;196m'
+GOLD='\033[38;5;214m'
+NC='\033[0m'
+
+# ---------- TYPEWRITER EFFECT ----------
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.015}"
+
+    for ((i=0; i<${#text}; i++)); do
+        printf '%s' "${text:$i:1}"
+        sleep "$delay"
+    done
+    printf '\n'
+}
+
+# ---------- ROOT CHECK ----------
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}[ERROR] Please run this script as root.${NC}"
+    echo "Usage: sudo bash fastfetch-install.sh"
+    exit 1
+fi
+
+set -Eeuo pipefail
+
+trap 'echo -e "\n${RED}[ERROR] Installation failed at line $LINENO.${NC}"; exit 1' ERR
+
+clear
+
+# ---------- BANNER ----------
+echo -e "${CYAN}"
+cat <<'EOF'
+ ____   _    ____      _   _____  __
+|  _ \ / \  |  _ \    / \ | ____| \ \
+| |_) / _ \ | |_) |  / _ \|  _|    \ \
+|  __/ ___ \|  _ <  / ___ \ |___   / /
+|_| /_/   \_\_| \_\/_/   \_\_____| /_/
+EOF
+
+echo -e "${PURPLE}              FASTFETCH INSTALLER${NC}"
+echo -e "${GRAY}           System Information Tool${NC}"
+echo -e "${GOLD}                Credits: PARA.EXE${NC}"
+echo -e "${CYAN}============================================================${NC}"
+echo
+
+typewrite "[PARA.EXE] Initializing Fastfetch installer..." 0.02
+
+# ---------- OS CHECK ----------
+if [[ ! -r /etc/os-release ]]; then
+    echo -e "${RED}[ERROR] Cannot detect the operating system.${NC}"
+    exit 1
+fi
+
+source /etc/os-release
+
+if [[ "${ID:-}" != "ubuntu" && "${ID:-}" != "debian" ]]; then
+    echo -e "${RED}[ERROR] This installer supports Ubuntu and Debian only.${NC}"
+    exit 1
+fi
+
+if [[ "${ID:-}" == "ubuntu" ]]; then
+    echo -e "${WHITE}Operating System: ${CYAN}${PRETTY_NAME:-Ubuntu}${NC}"
+    echo
+    read -r -p "$(echo -e "${GOLD}Add the Fastfetch PPA and continue? [Y/N]: ${NC}")" CONFIRM
+
+    case "$CONFIRM" in
+        [Yy]|[Yy][Ee][Ss]) ;;
+        *)
+            echo -e "${RED}Installation cancelled.${NC}"
+            exit 0
+            ;;
+    esac
+
+    echo
+    typewrite "[1/4] Installing repository management tools..." 0.015
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common ca-certificates
+
+    echo
+    typewrite "[2/4] Adding Fastfetch PPA..." 0.015
+    add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+
+else
+    echo -e "${WHITE}Operating System: ${CYAN}${PRETTY_NAME:-Debian}${NC}"
+    echo
+    echo -e "${GOLD}Using Debian package repositories.${NC}"
+fi
+
+echo
+typewrite "[3/4] Updating package lists..." 0.015
+apt-get update
+
+echo
+typewrite "[4/4] Installing Fastfetch..." 0.015
+DEBIAN_FRONTEND=noninteractive apt-get install -y fastfetch
+
+echo
+echo -e "${GREEN}============================================================${NC}"
+typewrite "        FASTFETCH INSTALLED SUCCESSFULLY!" 0.025
+echo -e "${GREEN}============================================================${NC}"
+echo
+echo -e "${WHITE}Run Fastfetch using:${NC} ${CYAN}fastfetch${NC}"
+echo
+
+typewrite "[PARA.EXE] Launching Fastfetch..." 0.02
+echo
+fastfetch
+
+echo
+echo -e "${GOLD}Installation complete. Credits: PARA.EXE${NC}"
