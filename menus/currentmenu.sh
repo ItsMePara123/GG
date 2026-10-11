@@ -67,52 +67,52 @@ declare -A MODULE_DESCRIPTION
 # =============================================================================
 
 MODULE_NAME[1]="Pterodactyl Hub"
-MODULE_URL[1]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/PterodactylHub"
+MODULE_URL[1]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/PterodactylHub"
 MODULE_CATEGORY[1]="PANELS"
 MODULE_DESCRIPTION[1]="Pterodactyl management hub"
 
 MODULE_NAME[2]="Reviactyl Panel"
-MODULE_URL[2]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Reviactyl_Installer.sh"
+MODULE_URL[2]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/Reviactyl_Installer.sh"
 MODULE_CATEGORY[2]="PANELS"
 MODULE_DESCRIPTION[2]="Reviactyl panel installer"
 
 MODULE_NAME[3]="Jexcatyl Panel"
-MODULE_URL[3]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/Jexcatylnstall"
+MODULE_URL[3]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/Jexcatylnstall"
 MODULE_CATEGORY[3]="PANELS"
 MODULE_DESCRIPTION[3]="Jexcatyl panel installer"
 
 MODULE_NAME[4]="Mythical Dash"
-MODULE_URL[4]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/MythicalDash"
+MODULE_URL[4]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/MythicalDash"
 MODULE_CATEGORY[4]="PANELS"
 MODULE_DESCRIPTION[4]="MythicalDash client area installer"
 
 MODULE_NAME[5]="Cockpit"
-MODULE_URL[5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CockpitInstall"
+MODULE_URL[5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/CockpitInstall"
 MODULE_CATEGORY[5]="PANELS"
 MODULE_DESCRIPTION[5]="Cockpit server administration"
 
 MODULE_NAME[6]="WHMCS"
-MODULE_URL[6]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/whmcs"
+MODULE_URL[6]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/WHMCS"
 MODULE_CATEGORY[6]="PANELS"
 MODULE_DESCRIPTION[6]="WHMCS hosting management"
 
 MODULE_NAME[7]="Convoy"
-MODULE_URL[7]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/convoy"
+MODULE_URL[7]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/convoy"
 MODULE_CATEGORY[7]="PANELS"
 MODULE_DESCRIPTION[7]="Convoy deployment module"
 
 MODULE_NAME[8]="XRDP"
-MODULE_URL[8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/xrdp"
+MODULE_URL[8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/remote-access/xrdp"
 MODULE_CATEGORY[8]="PANELS"
 MODULE_DESCRIPTION[8]="Remote desktop installer"
 
 MODULE_NAME[9]="Paymenter"
-MODULE_URL[9]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/paymenter"
+MODULE_URL[9]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/paymenter"
 MODULE_CATEGORY[9]="PANELS"
 MODULE_DESCRIPTION[9]="Paymenter billing deployment"
 
 MODULE_NAME[10]="HVM V8"
-MODULE_URL[10]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/hvmv8"
+MODULE_URL[10]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/hvmv8"
 MODULE_CATEGORY[10]="PANELS"
 MODULE_DESCRIPTION[10]="HVM V8 deployment module"
 
@@ -121,47 +121,47 @@ MODULE_DESCRIPTION[10]="HVM V8 deployment module"
 # =============================================================================
 
 MODULE_NAME[11]="Auto Root"
-MODULE_URL[11]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/sshfix"
+MODULE_URL[11]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/sshfix"
 MODULE_CATEGORY[11]="SERVER TOOLS"
 MODULE_DESCRIPTION[11]="SSH and root configuration"
 
 MODULE_NAME[12]="Cloudflare Installer"
-MODULE_URL[12]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/CloudflareMenu"
+MODULE_URL[12]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/CloudflareMenu"
 MODULE_CATEGORY[12]="SERVER TOOLS"
 MODULE_DESCRIPTION[12]="Cloudflare management utility"
 
 MODULE_NAME[13]="Docker VM"
-MODULE_URL[13]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/dockercontainer"
+MODULE_URL[13]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/dockercontainer"
 MODULE_CATEGORY[13]="SERVER TOOLS"
 MODULE_DESCRIPTION[13]="Docker container management"
 
 MODULE_NAME[14]="Local SSL Generator"
-MODULE_URL[14]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SSL%20GENRATOR"
+MODULE_URL[14]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customization/SSL%20GENRATOR"
 MODULE_CATEGORY[14]="SERVER TOOLS"
 MODULE_DESCRIPTION[14]="Local SSL certificate generator"
 
 MODULE_NAME[15]="Swap RAM"
-MODULE_URL[15]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/SwapRam"
+MODULE_URL[15]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/SwapRam"
 MODULE_CATEGORY[15]="SERVER TOOLS"
 MODULE_DESCRIPTION[15]="Swap memory management"
 
 MODULE_NAME[16]="Nginx Reload"
-MODULE_URL[16]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/NginxReload"
+MODULE_URL[16]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/NginxReload"
 MODULE_CATEGORY[16]="SERVER TOOLS"
 MODULE_DESCRIPTION[16]="Reload Nginx service"
 
 MODULE_NAME[17]="Blueprint Installer"
-MODULE_URL[17]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/BlueprintFix"
+MODULE_URL[17]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/BlueprintFix"
 MODULE_CATEGORY[17]="SERVER TOOLS"
 MODULE_DESCRIPTION[17]="Blueprint installation utility"
 
 MODULE_NAME[18]="VPS Menu"
-MODULE_URL[18]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMenu"
+MODULE_URL[18]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/menus/VpsMenu"
 MODULE_CATEGORY[18]="SERVER TOOLS"
 MODULE_DESCRIPTION[18]="VPS management toolkit"
 
 MODULE_NAME[19]="Custom MOTD Builder"
-MODULE_URL[19]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customotdbuilder"
+MODULE_URL[19]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customization/customotdbuilder"
 MODULE_CATEGORY[19]="SERVER TOOLS"
 MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 
@@ -170,22 +170,22 @@ MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 # =============================================================================
 
 MODULE_NAME[20]="Pterodactyl Panel Installer"
-MODULE_URL[20]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/pteroinstall"
+MODULE_URL[20]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/pteroinstall"
 MODULE_CATEGORY[20]="PTERODACTYL"
 MODULE_DESCRIPTION[20]="Install Pterodactyl Panel"
 
 MODULE_NAME[21]="Pterodactyl Wings"
-MODULE_URL[21]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/wingsptero"
+MODULE_URL[21]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/wingsptero"
 MODULE_CATEGORY[21]="PTERODACTYL"
 MODULE_DESCRIPTION[21]="Install Pterodactyl Wings"
 
 MODULE_NAME[22]="Pterodactyl Update"
-MODULE_URL[22]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/updateptero"
+MODULE_URL[22]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/updateptero"
 MODULE_CATEGORY[22]="PTERODACTYL"
 MODULE_DESCRIPTION[22]="Update Pterodactyl"
 
 MODULE_NAME[23]="Pterodactyl Uninstall"
-MODULE_URL[23]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/uninstallptero"
+MODULE_URL[23]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/uninstallptero"
 MODULE_CATEGORY[23]="PTERODACTYL"
 MODULE_DESCRIPTION[23]="Uninstall Pterodactyl"
 
@@ -195,48 +195,48 @@ MODULE_CATEGORY[24]="PTERODACTYL"
 MODULE_DESCRIPTION[24]="ParaNoob Blueprint installer"
 
 MODULE_NAME[25]="Cloudflare Legacy Installer"
-MODULE_URL[25]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/cloudflareinstall"
+MODULE_URL[25]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/cloudflareinstall"
 MODULE_CATEGORY[25]="NETWORKING"
 MODULE_DESCRIPTION[25]="Legacy Cloudflare installer"
 
 MODULE_NAME[26]="Theme Installer"
-MODULE_URL[26]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/thememenu"
+MODULE_URL[26]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customization/thememenu"
 MODULE_CATEGORY[26]="PTERODACTYL"
 MODULE_DESCRIPTION[26]="Pterodactyl theme manager"
 
 MODULE_NAME[27]="Playit Setup"
-MODULE_URL[27]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/playit"
+MODULE_URL[27]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/playit"
 MODULE_CATEGORY[27]="NETWORKING"
 MODULE_DESCRIPTION[27]="Playit networking setup"
 
 MODULE_NAME[28]="Pterodactyl Bot"
-MODULE_URL[28]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/PteroBot"
+MODULE_URL[28]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/bots/PteroBot"
 MODULE_CATEGORY[28]="PTERODACTYL"
 MODULE_DESCRIPTION[28]="Pterodactyl bot manager"
 
 MODULE_NAME[29]="Backup Manager"
-MODULE_URL[29]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/BackUp"
+MODULE_URL[29]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/BackUp"
 MODULE_CATEGORY[29]="SERVER"
 MODULE_DESCRIPTION[29]="Server backup manager"
 
 MODULE_NAME[30]="Nginx Reload Legacy"
-MODULE_URL[30]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/NginxReload"
+MODULE_URL[30]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/NginxReload"
 MODULE_CATEGORY[30]="SERVER"
 MODULE_DESCRIPTION[30]="Legacy Nginx reload module"
 
 MODULE_NAME[31]="Pterodactyl Restart"
-MODULE_URL[31]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/RestartPtero"
+MODULE_URL[31]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/panels/RestartPtero"
 MODULE_CATEGORY[31]="PTERODACTYL"
 MODULE_DESCRIPTION[31]="Restart Pterodactyl services"
 
 MODULE_NAME[32]="VPS Maker"
-MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/VpsMaker"
+MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/menus/VpsMaker"
 MODULE_CATEGORY[32]="VPS"
 MODULE_DESCRIPTION[32]="VPS creation utility"
 
 # Fixed duplicate ID: Proxmox is 33
 MODULE_NAME[33]="Proxmox Installer Debian 13"
-MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/proxmoxinstaller"
+MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxinstallerdebain13"
 MODULE_CATEGORY[33]="VPS"
 MODULE_DESCRIPTION[33]="Proxmox Installer in Debian 13"
 
