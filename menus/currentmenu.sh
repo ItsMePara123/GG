@@ -260,7 +260,12 @@ MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/mai
 MODULE_CATEGORY[33]="VIRTUALIZATION"
 MODULE_DESCRIPTION[33]="Proxmox Installer in Debian 13"
 
-MODULE_COUNT=37
+MODULE_NAME[38]="Proxmox Menu"
+MODULE_URL[38]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxmenu"
+MODULE_CATEGORY[38]="VIRTUALIZATION"
+MODULE_DESCRIPTION[38]="Open Proxmox installer menu for Debian 12 / Debian 13"
+
+MODULE_COUNT=38
 
 # -----------------------------------------------------------------------------
 # TERMINAL
@@ -588,7 +593,7 @@ boot_screen() {
     printf '\n'
 
     printf '       %b' "$GRAY"
-    typewrite "37 modules / category submenus / server operations" 0.012
+    typewrite "38 modules / category submenus / server operations" 0.012
     printf '%b\n\n' "$RESET"
 
     progress "loading core" 25
@@ -958,8 +963,14 @@ show_category() {
         printf '\n  %bCATEGORY%b  %b%s%b\n' "$GRAY$BOLD" "$RESET" "$color$BOLD" "$category" "$RESET"
         printf '  %bSelect a module number, or B to go back%b\n' "$GRAY" "$RESET"
         menu_section "$category MODULES" "$color"
-        for id in $(printf '%s\n' "${!MODULE_NAME[@]}" | sort -n); do
-            if [[ "${MODULE_CATEGORY[$id]}" == "$category" ]]; then
+        # Proxmox Menu is pinned first in the Virtualization submenu.
+        if [[ "$category" == "VIRTUALIZATION" ]]; then
+            module_line 38 "$color"
+            found=1
+        fi
+
+        for id in $(printf '%s\\n' "${!MODULE_NAME[@]}" | sort -n); do
+            if [[ "${MODULE_CATEGORY[$id]}" == "$category" && !( "$category" == "VIRTUALIZATION" && "$id" == "38" ) ]]; then
                 module_line "$id" "$color"
                 found=1
             fi
