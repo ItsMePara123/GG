@@ -234,13 +234,33 @@ MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/mai
 MODULE_CATEGORY[32]="VPS"
 MODULE_DESCRIPTION[32]="VPS creation utility"
 
+MODULE_NAME[34]="Fastfetch Installer"
+MODULE_URL[34]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/fastfetchinstaller"
+MODULE_CATEGORY[34]="SERVER TOOLS"
+MODULE_DESCRIPTION[34]="Install Fastfetch system information tool"
+
+MODULE_NAME[35]="Tailscale"
+MODULE_URL[35]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/tailscale"
+MODULE_CATEGORY[35]="NETWORKING"
+MODULE_DESCRIPTION[35]="Install and configure Tailscale networking"
+
+MODULE_NAME[36]="RDP"
+MODULE_URL[36]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/remote-access/rdp"
+MODULE_CATEGORY[36]="REMOTE ACCESS"
+MODULE_DESCRIPTION[36]="Remote desktop access setup"
+
+MODULE_NAME[37]="LXC Installer"
+MODULE_URL[37]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/lxcinstall"
+MODULE_CATEGORY[37]="VIRTUALIZATION"
+MODULE_DESCRIPTION[37]="Install and configure LXC containers"
+
 # Fixed duplicate ID: Proxmox is 33
 MODULE_NAME[33]="Proxmox Installer Debian 13"
 MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxinstallerdebain13"
 MODULE_CATEGORY[33]="VPS"
 MODULE_DESCRIPTION[33]="Proxmox Installer in Debian 13"
 
-MODULE_COUNT=33
+MODULE_COUNT=37
 
 # -----------------------------------------------------------------------------
 # TERMINAL
@@ -568,7 +588,7 @@ boot_screen() {
     printf '\n'
 
     printf '       %b' "$GRAY"
-    typewrite "33 modules / remote deployment / server operations" 0.012
+    typewrite "37 modules / remote deployment / server operations" 0.012
     printf '%b\n\n' "$RESET"
 
     progress "loading core" 25
@@ -925,6 +945,7 @@ show_menu() {
     module_line 17 "$BRIGHT_GREEN"
     module_line 18 "$BRIGHT_GREEN"
     module_line 19 "$BRIGHT_GREEN"
+    module_line 34 "$BRIGHT_GREEN"
 
     menu_section "PTERODACTYL" "$BRIGHT_MAGENTA"
 
@@ -941,13 +962,19 @@ show_menu() {
 
     module_line 25 "$BRIGHT_YELLOW"
     module_line 27 "$BRIGHT_YELLOW"
+    module_line 35 "$BRIGHT_YELLOW"
     module_line 29 "$BRIGHT_YELLOW"
     module_line 30 "$BRIGHT_YELLOW"
 
-    menu_section "VPS" "$BRIGHT_BLUE"
+    menu_section "REMOTE ACCESS" "$BRIGHT_MAGENTA"
+
+    module_line 36 "$BRIGHT_MAGENTA"
+
+    menu_section "VIRTUALIZATION" "$BRIGHT_BLUE"
 
     module_line 32 "$BRIGHT_BLUE"
     module_line 33 "$BRIGHT_BLUE"
+    module_line 37 "$BRIGHT_BLUE"
 
     printf '\n'
 
@@ -1196,7 +1223,7 @@ main() {
             # ALL MODULES
             # -----------------------------------------------------------------
 
-            1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33)
+            1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37)
 
                 run_module "$choice"
 
