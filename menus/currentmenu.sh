@@ -88,7 +88,7 @@ MODULE_DESCRIPTION[4]="MythicalDash client area installer"
 
 MODULE_NAME[5]="Cockpit"
 MODULE_URL[5]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/CockpitInstall"
-MODULE_CATEGORY[5]="PANELS"
+MODULE_CATEGORY[5]="MISC"
 MODULE_DESCRIPTION[5]="Cockpit server administration"
 
 MODULE_NAME[6]="WHMCS"
@@ -103,7 +103,7 @@ MODULE_DESCRIPTION[7]="Convoy deployment module"
 
 MODULE_NAME[8]="XRDP"
 MODULE_URL[8]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/remote-access/xrdp"
-MODULE_CATEGORY[8]="PANELS"
+MODULE_CATEGORY[8]="REMOTE ACCESS"
 MODULE_DESCRIPTION[8]="Remote desktop installer"
 
 MODULE_NAME[9]="Paymenter"
@@ -122,22 +122,22 @@ MODULE_DESCRIPTION[10]="HVM V8 deployment module"
 
 MODULE_NAME[11]="Auto Root"
 MODULE_URL[11]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/sshfix"
-MODULE_CATEGORY[11]="SERVER TOOLS"
+MODULE_CATEGORY[11]="NETWORKING"
 MODULE_DESCRIPTION[11]="SSH and root configuration"
 
 MODULE_NAME[12]="Cloudflare Installer"
 MODULE_URL[12]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/CloudflareMenu"
-MODULE_CATEGORY[12]="SERVER TOOLS"
+MODULE_CATEGORY[12]="NETWORKING"
 MODULE_DESCRIPTION[12]="Cloudflare management utility"
 
 MODULE_NAME[13]="Docker VM"
 MODULE_URL[13]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/dockercontainer"
-MODULE_CATEGORY[13]="SERVER TOOLS"
+MODULE_CATEGORY[13]="VIRTUALIZATION"
 MODULE_DESCRIPTION[13]="Docker container management"
 
 MODULE_NAME[14]="Local SSL Generator"
 MODULE_URL[14]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customization/SSL%20GENRATOR"
-MODULE_CATEGORY[14]="SERVER TOOLS"
+MODULE_CATEGORY[14]="CUSTOMIZATION"
 MODULE_DESCRIPTION[14]="Local SSL certificate generator"
 
 MODULE_NAME[15]="Swap RAM"
@@ -147,7 +147,7 @@ MODULE_DESCRIPTION[15]="Swap memory management"
 
 MODULE_NAME[16]="Nginx Reload"
 MODULE_URL[16]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/NginxReload"
-MODULE_CATEGORY[16]="SERVER TOOLS"
+MODULE_CATEGORY[16]="NETWORKING"
 MODULE_DESCRIPTION[16]="Reload Nginx service"
 
 MODULE_NAME[17]="Blueprint Installer"
@@ -157,12 +157,12 @@ MODULE_DESCRIPTION[17]="Blueprint installation utility"
 
 MODULE_NAME[18]="VPS Menu"
 MODULE_URL[18]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/menus/VpsMenu"
-MODULE_CATEGORY[18]="SERVER TOOLS"
+MODULE_CATEGORY[18]="VPS"
 MODULE_DESCRIPTION[18]="VPS management toolkit"
 
 MODULE_NAME[19]="Custom MOTD Builder"
 MODULE_URL[19]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/customization/customotdbuilder"
-MODULE_CATEGORY[19]="SERVER TOOLS"
+MODULE_CATEGORY[19]="CUSTOMIZATION"
 MODULE_DESCRIPTION[19]="Custom terminal MOTD builder"
 
 # =============================================================================
@@ -216,12 +216,12 @@ MODULE_DESCRIPTION[28]="Pterodactyl bot manager"
 
 MODULE_NAME[29]="Backup Manager"
 MODULE_URL[29]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/system-tools/BackUp"
-MODULE_CATEGORY[29]="SERVER"
+MODULE_CATEGORY[29]="SERVER TOOLS"
 MODULE_DESCRIPTION[29]="Server backup manager"
 
 MODULE_NAME[30]="Nginx Reload Legacy"
 MODULE_URL[30]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/networking/NginxReload"
-MODULE_CATEGORY[30]="SERVER"
+MODULE_CATEGORY[30]="NETWORKING"
 MODULE_DESCRIPTION[30]="Legacy Nginx reload module"
 
 MODULE_NAME[31]="Pterodactyl Restart"
@@ -231,7 +231,7 @@ MODULE_DESCRIPTION[31]="Restart Pterodactyl services"
 
 MODULE_NAME[32]="VPS Maker"
 MODULE_URL[32]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/menus/VpsMaker"
-MODULE_CATEGORY[32]="VPS"
+MODULE_CATEGORY[32]="VIRTUALIZATION"
 MODULE_DESCRIPTION[32]="VPS creation utility"
 
 MODULE_NAME[34]="Fastfetch Installer"
@@ -257,7 +257,7 @@ MODULE_DESCRIPTION[37]="Install and configure LXC containers"
 # Fixed duplicate ID: Proxmox is 33
 MODULE_NAME[33]="Proxmox Installer Debian 13"
 MODULE_URL[33]="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxinstallerdebain13"
-MODULE_CATEGORY[33]="VPS"
+MODULE_CATEGORY[33]="VIRTUALIZATION"
 MODULE_DESCRIPTION[33]="Proxmox Installer in Debian 13"
 
 MODULE_COUNT=37
@@ -588,7 +588,7 @@ boot_screen() {
     printf '\n'
 
     printf '       %b' "$GRAY"
-    typewrite "37 modules / remote deployment / server operations" 0.012
+    typewrite "37 modules / category submenus / server operations" 0.012
     printf '%b\n\n' "$RESET"
 
     progress "loading core" 25
@@ -907,112 +907,89 @@ menu_section() {
 # FULL MODULE MENU
 # -----------------------------------------------------------------------------
 
-show_menu() {
-
-    draw_header
-
-    printf '\n'
-
-    printf '  %bWORKSPACE%b\n' \
-        "$BRIGHT_WHITE$BOLD" \
-        "$RESET"
-
-    printf '  %bChoose a module to launch%b\n' \
-        "$GRAY" \
-        "$RESET"
-
-    menu_section "PANELS" "$BRIGHT_CYAN"
-
-    module_line 1 "$BRIGHT_CYAN"
-    module_line 2 "$BRIGHT_CYAN"
-    module_line 3 "$BRIGHT_CYAN"
-    module_line 4 "$BRIGHT_CYAN"
-    module_line 5 "$BRIGHT_CYAN"
-    module_line 6 "$BRIGHT_CYAN"
-    module_line 7 "$BRIGHT_CYAN"
-    module_line 8 "$BRIGHT_CYAN"
-    module_line 9 "$BRIGHT_CYAN"
-    module_line 10 "$BRIGHT_CYAN"
-
-    menu_section "SERVER TOOLS" "$BRIGHT_GREEN"
-
-    module_line 11 "$BRIGHT_GREEN"
-    module_line 12 "$BRIGHT_GREEN"
-    module_line 13 "$BRIGHT_GREEN"
-    module_line 14 "$BRIGHT_GREEN"
-    module_line 15 "$BRIGHT_GREEN"
-    module_line 16 "$BRIGHT_GREEN"
-    module_line 17 "$BRIGHT_GREEN"
-    module_line 18 "$BRIGHT_GREEN"
-    module_line 19 "$BRIGHT_GREEN"
-    module_line 34 "$BRIGHT_GREEN"
-
-    menu_section "PTERODACTYL" "$BRIGHT_MAGENTA"
-
-    module_line 20 "$BRIGHT_MAGENTA"
-    module_line 21 "$BRIGHT_MAGENTA"
-    module_line 22 "$BRIGHT_MAGENTA"
-    module_line 23 "$BRIGHT_MAGENTA"
-    module_line 24 "$BRIGHT_MAGENTA"
-    module_line 26 "$BRIGHT_MAGENTA"
-    module_line 28 "$BRIGHT_MAGENTA"
-    module_line 31 "$BRIGHT_MAGENTA"
-
-    menu_section "NETWORK / SERVER" "$BRIGHT_YELLOW"
-
-    module_line 25 "$BRIGHT_YELLOW"
-    module_line 27 "$BRIGHT_YELLOW"
-    module_line 35 "$BRIGHT_YELLOW"
-    module_line 29 "$BRIGHT_YELLOW"
-    module_line 30 "$BRIGHT_YELLOW"
-
-    menu_section "REMOTE ACCESS" "$BRIGHT_MAGENTA"
-
-    module_line 36 "$BRIGHT_MAGENTA"
-
-    menu_section "VIRTUALIZATION" "$BRIGHT_BLUE"
-
-    module_line 32 "$BRIGHT_BLUE"
-    module_line 33 "$BRIGHT_BLUE"
-    module_line 37 "$BRIGHT_BLUE"
-
-    printf '\n'
-
-    printf '  %b────────────────────────────────────────────────────────────────────%b\n' \
-        "$GRAY" \
-        "$RESET"
-
-    printf '\n'
-
-    printf '  %b[ C ]%b  Cloudflare Settings\n' \
-        "$BRIGHT_CYAN$BOLD" \
-        "$RESET"
-
-    printf '  %b[ I ]%b  System Information\n' \
-        "$BRIGHT_BLUE$BOLD" \
-        "$RESET"
-
-    printf '  %b[ R ]%b  Refresh\n' \
-        "$BRIGHT_GREEN$BOLD" \
-        "$RESET"
-
-    printf '  %b[ Q ]%b  Exit\n' \
-        "$BRIGHT_RED$BOLD" \
-        "$RESET"
-
-    printf '\n'
-
-    printf '  %bPARA%b %b>%b ' \
-        "$BRIGHT_CYAN$BOLD" \
-        "$RESET" \
-        "$BRIGHT_WHITE$BOLD" \
-        "$RESET"
+show_category_menu() {
+    while true; do
+        draw_header
+        printf '\n'
+        printf '  %bWORKSPACE / CATEGORY DASHBOARD%b\n' "$BRIGHT_WHITE$BOLD" "$RESET"
+        printf '  %bChoose a category to open its submenu%b\n' "$GRAY" "$RESET"
+        menu_section "DEPLOYMENT & MANAGEMENT" "$BRIGHT_CYAN"
+        printf '  %b[ 1 ]%b  PANELS\n' "$BRIGHT_CYAN$BOLD" "$RESET"
+        printf '  %b[ 2 ]%b  PTERODACTYL\n' "$BRIGHT_MAGENTA$BOLD" "$RESET"
+        printf '  %b[ 3 ]%b  SERVER TOOLS\n' "$BRIGHT_GREEN$BOLD" "$RESET"
+        printf '  %b[ 4 ]%b  NETWORKING\n' "$BRIGHT_YELLOW$BOLD" "$RESET"
+        printf '  %b[ 5 ]%b  REMOTE ACCESS\n' "$BRIGHT_MAGENTA$BOLD" "$RESET"
+        printf '  %b[ 6 ]%b  VIRTUALIZATION\n' "$BRIGHT_BLUE$BOLD" "$RESET"
+        printf '  %b[ 7 ]%b  CUSTOMIZATION\n' "$BRIGHT_CYAN$BOLD" "$RESET"
+        printf '  %b[ 8 ]%b  VPS\n' "$BRIGHT_GREEN$BOLD" "$RESET"
+        printf '  %b[ 9 ]%b  MISC\n' "$BRIGHT_WHITE$BOLD" "$RESET"
+        printf '\n'
+        printf '  %b[ C ]%b  Cloudflare Settings\n' "$BRIGHT_CYAN$BOLD" "$RESET"
+        printf '  %b[ I ]%b  System Information\n' "$BRIGHT_BLUE$BOLD" "$RESET"
+        printf '  %b[ R ]%b  Refresh\n' "$BRIGHT_GREEN$BOLD" "$RESET"
+        printf '  %b[ Q ]%b  Exit\n' "$BRIGHT_RED$BOLD" "$RESET"
+        printf '\n  %bPARA >%b ' "$BRIGHT_CYAN$BOLD" "$RESET"
+        read -r choice
+        case "$choice" in
+            1) show_category "PANELS" "$BRIGHT_CYAN" ;;
+            2) show_category "PTERODACTYL" "$BRIGHT_MAGENTA" ;;
+            3) show_category "SERVER TOOLS" "$BRIGHT_GREEN" ;;
+            4) show_category "NETWORKING" "$BRIGHT_YELLOW" ;;
+            5) show_category "REMOTE ACCESS" "$BRIGHT_MAGENTA" ;;
+            6) show_category "VIRTUALIZATION" "$BRIGHT_BLUE" ;;
+            7) show_category "CUSTOMIZATION" "$BRIGHT_CYAN" ;;
+            8) show_category "VPS" "$BRIGHT_GREEN" ;;
+            9) show_category "MISC" "$BRIGHT_WHITE" ;;
+            c|C) cloudflare_settings ;;
+            i|I) system_info ;;
+            r|R) spinner "refreshing workspace" 15 ;;
+            q|Q|0|exit|quit) exit_console ;;
+            *) printf '\n  %bUnknown category.%b\n' "$BRIGHT_RED$BOLD" "$RESET"; sleep 0.7 ;;
+        esac
+    done
 }
 
-# -----------------------------------------------------------------------------
-# CLOUDFARE SETTINGS
-# -----------------------------------------------------------------------------
+show_category() {
+    local category="$1"
+    local color="$2"
+    local id choice found=0
+    while true; do
+        draw_header
+        printf '\n  %bCATEGORY%b  %b%s%b\n' "$GRAY$BOLD" "$RESET" "$color$BOLD" "$category" "$RESET"
+        printf '  %bSelect a module number, or B to go back%b\n' "$GRAY" "$RESET"
+        menu_section "$category MODULES" "$color"
+        for id in $(printf '%s\n' "${!MODULE_NAME[@]}" | sort -n); do
+            if [[ "${MODULE_CATEGORY[$id]}" == "$category" ]]; then
+                module_line "$id" "$color"
+                found=1
+            fi
+        done
+        if [[ "$found" -eq 0 ]]; then
+            printf '  %bNo modules registered in this category yet.%b\n' "$BRIGHT_YELLOW" "$RESET"
+        fi
+        printf '\n  %b[ B ]%b Back to categories    %b[ Q ]%b Exit\n' "$BRIGHT_CYAN$BOLD" "$RESET" "$BRIGHT_RED$BOLD" "$RESET"
+        printf '\n  %bPARA / %s >%b ' "$BRIGHT_CYAN$BOLD" "$category" "$RESET"
+        read -r choice
+        case "$choice" in
+            b|B|back) return ;;
+            q|Q|exit|quit|0) exit_console ;;
+            *)
+                if [[ "$choice" =~ ^[0-9]+$ ]] && [[ -n "${MODULE_NAME[$choice]:-}" ]] && [[ "${MODULE_CATEGORY[$choice]}" == "$category" ]]; then
+                    run_module "$choice"
+                else
+                    printf '\n  %bInvalid option for this category.%b\n' "$BRIGHT_RED$BOLD" "$RESET"
+                    sleep 0.7
+                fi
+                ;;
+        esac
+    done
+}
 
+show_menu() {
+    show_category_menu
+}
+
+# ----------------------------------------------------------------------------- 
 cloudflare_settings() {
 
     clear_screen
@@ -1206,70 +1183,10 @@ exit_console() {
 # -----------------------------------------------------------------------------
 
 main() {
-
     hide_cursor
-
     boot_screen
-
     while true; do
-
-        show_menu
-
-        read -r choice
-
-        case "$choice" in
-
-            # -----------------------------------------------------------------
-            # ALL MODULES
-            # -----------------------------------------------------------------
-
-            1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37)
-
-                run_module "$choice"
-
-                ;;
-
-            # -----------------------------------------------------------------
-            # SPECIAL
-            # -----------------------------------------------------------------
-
-            c|C)
-
-                cloudflare_settings
-
-                ;;
-
-            i|I)
-
-                system_info
-
-                ;;
-
-            r|R)
-
-                spinner "refreshing workspace" 15
-
-                ;;
-
-            q|Q|0|exit|quit)
-
-                exit_console
-
-                ;;
-
-            *)
-
-                printf '\n'
-
-                printf '  %bUnknown command.%b\n' \
-                    "$BRIGHT_RED$BOLD" \
-                    "$RESET"
-
-                sleep 0.7
-
-                ;;
-        esac
-
+        show_category_menu
     done
 }
 
