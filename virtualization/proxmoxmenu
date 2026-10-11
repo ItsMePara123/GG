@@ -1,0 +1,216 @@
+```bash
+#!/usr/bin/env bash
+
+# ============================================================
+#              PARA // PROXMOX INSTALLER
+#                 Credits: Para
+#                    Version: 1.0
+# ============================================================
+
+# Root check
+if [[ $EUID -ne 0 ]]; then
+    echo "Please run this menu as root."
+    exit 1
+fi
+
+# Installer URLs
+DEBIAN12_URL="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxinstallerdebian12"
+DEBIAN13_URL="https://raw.githubusercontent.com/ItsMePara123/GG/refs/heads/main/virtualization/proxmoxinstallerdebain13"
+
+# RGB colors
+RESET='\033[0m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RED='\033[38;5;196m'
+PINK='\033[38;5;213m'
+PURPLE='\033[38;5;135m'
+BLUE='\033[38;5;39m'
+CYAN='\033[38;5;51m'
+GREEN='\033[38;5;46m'
+YELLOW='\033[38;5;226m'
+ORANGE='\033[38;5;208m'
+WHITE='\033[38;5;255m'
+GRAY='\033[38;5;245m'
+
+# Typewriter effect
+typewrite() {
+    local text="$1"
+    local delay="${2:-0.015}"
+
+    for ((i=0; i<${#text}; i++)); do
+        printf '%s' "${text:$i:1}"
+        sleep "$delay"
+    done
+    printf '\n'
+}
+
+# Animated loading
+loading() {
+    local message="$1"
+    local duration="${2:-2}"
+    local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+    local end=$((SECONDS + duration))
+
+    while (( SECONDS < end )); do
+        for frame in "${frames[@]}"; do
+            printf "\r${CYAN}  %s ${WHITE}%s${RESET}" "$frame" "$message"
+            sleep 0.08
+        done
+    done
+
+    printf "\r${GREEN}  ✔ ${WHITE}%s${RESET}\n" "$message"
+}
+
+# RGB gradient banner
+banner() {
+    clear
+
+    printf "${PURPLE}╔══════════════════════════════════════════════════════════════╗${RESET}\n"
+    printf "${PURPLE}║${PINK}                                                              ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${RED}       ██████╗  █████╗ ██████╗  █████╗                        ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${ORANGE}       ██╔══██╗██╔══██╗██╔══██╗██╔══██╗                       ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${YELLOW}       ██████╔╝███████║██████╔╝███████║                       ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${GREEN}       ██╔═══╝ ██╔══██║██╔══██╗██╔══██║                       ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${CYAN}       ██║     ██║  ██║██║  ██║██║  ██║                       ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${BLUE}       ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝                       ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${PINK}                                                              ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${CYAN}                P R O X M O X   I N S T A L L E R            ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}║${PINK}                                                              ${PURPLE}║${RESET}\n"
+    printf "${PURPLE}╠══════════════════════════════════════════════════════════════╣${RESET}\n"
+    printf "${PURPLE}║ ${WHITE}Credits: ${PINK}Para${WHITE}                 Version: ${CYAN}1.0${PURPLE}                 ║${RESET}\n"
+    printf "${PURPLE}║ ${GRAY}Debian 12 & Debian 13 Installer Menu${PURPLE}                       ║${RESET}\n"
+    printf "${PURPLE}╚══════════════════════════════════════════════════════════════╝${RESET}\n"
+    printf "\n"
+}
+
+# Menu
+menu() {
+    banner
+
+    printf "${CYAN}  ┌──────────────────── INSTALLATION MENU ────────────────────┐${RESET}\n"
+    printf "${CYAN}  │                                                           │${RESET}\n"
+    printf "${CYAN}  │${RESET}  ${GREEN}[1]${RESET} ${WHITE}Proxmox VE Installer - Debian 12${RESET}                  ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │${RESET}      ${GRAY}Bookworm${RESET}                                             ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │                                                           │${RESET}\n"
+    printf "${CYAN}  │${RESET}  ${BLUE}[2]${RESET} ${WHITE}Proxmox VE Installer - Debian 13${RESET}                  ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │${RESET}      ${GRAY}Trixie${RESET}                                               ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │                                                           │${RESET}\n"
+    printf "${CYAN}  │${RESET}  ${YELLOW}[3]${RESET} ${WHITE}Refresh Menu${RESET}                                        ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │${RESET}  ${RED}[0]${RESET} ${WHITE}Exit${RESET}                                                 ${CYAN}│${RESET}\n"
+    printf "${CYAN}  │                                                           │${RESET}\n"
+    printf "${CYAN}  └───────────────────────────────────────────────────────────┘${RESET}\n"
+    printf "\n"
+
+    read -rp "$(printf "${PINK}  PARA@PROXMOX ${WHITE}➜ ${CYAN}Select an option [0-3]: ${RESET}")" choice
+
+    case "$choice" in
+        1) run_installer "Debian 12" "$DEBIAN12_URL" ;;
+        2) run_installer "Debian 13" "$DEBIAN13_URL" ;;
+        3) loading "Refreshing interface..." 1; menu ;;
+        0)
+            printf "\n"
+            typewrite "${PINK}  Thanks for using PARA // PROXMOX INSTALLER!${RESET}" 0.025
+            exit 0
+            ;;
+        *)
+            printf "\n"
+            typewrite "${RED}  ✘ Invalid option! Please select 0, 1, 2 or 3.${RESET}" 0.02
+            sleep 1.5
+            menu
+            ;;
+    esac
+}
+
+# Download and execute the selected installer
+run_installer() {
+    local os="$1"
+    local url="$2"
+    local temp_script
+
+    printf "\n"
+    typewrite "${PURPLE}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}" 0.005
+    typewrite "${CYAN}  Selected: ${WHITE}Proxmox VE on Debian ${os#Debian }${RESET}" 0.02
+    typewrite "${YELLOW}  WARNING: This installer may modify system configuration.${RESET}" 0.02
+    typewrite "${YELLOW}  Ensure you have a backup before continuing.${RESET}" 0.02
+    printf "\n"
+
+    read -rp "$(printf "${WHITE}  Continue with Debian ${os#Debian } installation? [y/N]: ${RESET}")" confirm
+
+    case "$confirm" in
+        [yY]|[yY][eE][sS]) ;;
+        *)
+            typewrite "${ORANGE}  Installation cancelled.${RESET}" 0.02
+            sleep 1
+            menu
+            return
+            ;;
+    esac
+
+    temp_script=$(mktemp) || {
+        printf "${RED}  Failed to create temporary file.${RESET}\n"
+        exit 1
+    }
+
+    printf "\n"
+    loading "Downloading ${os} installer..." 1
+
+    if ! curl -fLsS --connect-timeout 15 --max-time 120 "$url" -o "$temp_script"; then
+        printf "\n${RED}  ✘ Download failed. Check your internet connection and URL.${RESET}\n"
+        rm -f "$temp_script"
+        read -rp "  Press Enter to return to menu..."
+        menu
+        return
+    fi
+
+    if [[ ! -s "$temp_script" ]]; then
+        printf "${RED}  ✘ Downloaded installer is empty.${RESET}\n"
+        rm -f "$temp_script"
+        read -rp "  Press Enter to return to menu..."
+        menu
+        return
+    fi
+
+    if ! head -n 1 "$temp_script" | grep -qE '^#!|^$'; then
+        printf "${RED}  ✘ Downloaded file does not look like a shell script.${RESET}\n"
+        rm -f "$temp_script"
+        read -rp "  Press Enter to return to menu..."
+        menu
+        return
+    fi
+
+    chmod 700 "$temp_script"
+
+    printf "\n"
+    typewrite "${GREEN}  ✔ Installer downloaded successfully.${RESET}" 0.02
+    typewrite "${CYAN}  Launching Debian ${os#Debian } installer...${RESET}" 0.02
+    printf "\n"
+
+    # Run the selected installer and preserve its exit status.
+    bash "$temp_script"
+    local status=$?
+
+    rm -f "$temp_script"
+
+    printf "\n"
+    if (( status == 0 )); then
+        typewrite "${GREEN}  ✔ Installer process completed.${RESET}" 0.02
+    else
+        printf "${RED}  ✘ Installer exited with status ${status}.${RESET}\n"
+    fi
+
+    printf "\n"
+    read -rp "  Press Enter to return to the menu..."
+    menu
+}
+
+# Startup animation
+clear
+typewrite "${PURPLE}  ╔══════════════════════════════════════════════════════════╗${RESET}" 0.01
+typewrite "${PINK}  ║           PARA // PROXMOX INSTALLER                       ║${RESET}" 0.01
+typewrite "${PURPLE}  ╚══════════════════════════════════════════════════════════╝${RESET}" 0.01
+loading "Initializing RGB interface..." 2
+typewrite "${GREEN}  ✔ Welcome to the installer menu, powered by Para.${RESET}" 0.02
+sleep 1
+
+menu
+```
